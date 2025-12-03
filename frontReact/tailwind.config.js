@@ -2,7 +2,13 @@
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        'azure-radiance': {
+          900: '#233985',
+        },
+      },
+    },
   },
   plugins: [],
 }
