@@ -1,23 +1,31 @@
+import { Link, useNavigate } from "react-router-dom";
+
 
 export function Login() {
+  const navigate = useNavigate();
+
+  const handleClick = () => { /* funcion para redirigir a la pagina de registro */
+    navigate('/dashboard');
+  };
+
   return (
     <div className="flex min-h-screen w-full bg-white">
-      {/* Left Side - Form */}
+      {/* lado izquierdo - formulario */}
       <div className="flex w-full flex-col justify-center px-4 py-12 sm:px-6 lg:w-1/2 lg:px-20 xl:px-24">
         <div className="mx-auto w-full max-w-sm lg:w-full">
           <div className="mb-12">
             <div className="flex items-center sm:text-2xl  gap-3 font-bold text-xl text-gray-900">
-              <img src="/Logo-StockManager.png" alt="Logo" className="h-16 w-auto" />
+              <img src="/Logo-StockManager.png" alt="Logo" className="h-14 w-auto" />
               StockManager
             </div>
           </div>
 
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Bienvenido de nuevo</h1>
-            <p className="mt-2 text-sm text-gray-500">Por favor ingresa tus datos</p>
+            <p className="mt-2 text-base text-gray-500">Por favor ingresa tus datos</p>
           </div>
 
-          <button className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200">
+          <button className=" cursor-pointer flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-base font-medium text-gray-900 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200">
             <svg className="h-5 w-5" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -43,14 +51,14 @@ export function Login() {
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-200"></div>
             </div>
-            <div className="relative flex justify-center text-sm">
+            <div className="relative flex justify-center text-base">
               <span className="bg-white px-2 text-gray-500"> o </span>
             </div>
           </div>
 
           <form className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-base font-medium text-gray-900">
                 Correo Electronico
               </label>
               <div className="mt-1">
@@ -60,13 +68,13 @@ export function Login() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-[#004cff] focus:outline-none focus:ring-1 focus:ring-[#004cff] sm:text-sm"
+                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-[#004cff] focus:outline-none focus:ring-1 focus:ring-[#004cff] sm:text-base"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-base font-medium text-gray-900">
                 Contraseña
               </label>
               <div className="mt-1">
@@ -76,7 +84,7 @@ export function Login() {
                   type="password"
                   autoComplete="current-password"
                   required
-                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-[#004cff] focus:outline-none focus:ring-1 focus:ring-[#004cff] sm:text-sm--"
+                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-[#004cff] focus:outline-none focus:ring-1 focus:ring-[#004cff] sm:text-base"
                 />
               </div>
             </div>
@@ -84,7 +92,7 @@ export function Login() {
             <div className="flex items-center justify-between">
 
 
-              <div className="text-sm">
+              <div className="text-base">
                 <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
                   Recuperar contraseña
                 </a>
@@ -92,27 +100,29 @@ export function Login() {
             </div>
 
             <div>
-              <button
+              <button onClick={handleClick}
                 type="submit"
-                className="flex w-full justify-center rounded-lg border border-transparent bg-[#004cff] px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-[#003ed3] focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                className="flex w-full justify-center rounded-lg border border-transparent bg-[#004cff] px-4 py-2.5 text-base font-medium text-white shadow-sm hover:bg-[#003ed3] focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
               >
                 Iniciar sesión
               </button>
             </div>
           </form>
 
-          <p className="mt-8 text-center text-sm text-gray-500">
+          <p className="mt-8 text-center text-base text-gray-500">
             ¿No posees una cuenta?{' '}
-            <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
-              Registrate
-            </a>
+            <Link to="/register">
+              <a className="cursor-pointer font-medium text-blue-600 hover:text-blue-500">
+                Registrate
+              </a>
+            </Link>
           </p>
         </div>
       </div>
 
-      {/* Right Side - Design */}
+      {/*ladoderech - slogan*/}
       <div className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center bg-[#093fc4] overflow-hidden">
-        {/* Grid Background */}
+
         <div className="absolute inset-0 z-0">
           <div
             className="h-full w-full"
@@ -125,18 +135,15 @@ export function Login() {
           ></div>
         </div>
 
-        {/* Content */}
+
         <div className="z-10 flex flex-col items-center text-center">
           <div className="mb-6 flex items-center gap-4">
             <h1 className="text-4xl font-bold text-white tracking-tight">StockManager</h1>
           </div>
-          <p className="max-w-sm text-lg text-gray-400 font-medium">
-            Free and Open-Source Tailwind CSS Admin Dashboard Template
+          <p className="max-w-sm text-xl text-gray-200 font-medium">
+            La plataforma de gestión de inventario que transforma los datos en crecimiento para tu negocio.
           </p>
         </div>
-
-        {/* Bottom Right Toggle */}
-
       </div>
     </div>
   );
