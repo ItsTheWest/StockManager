@@ -1,0 +1,18 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Ejecutar dep en frontReact",
+            "type": "shell",
+            "command": "npm run dep",
+            "options": {
+                "cwd": "${workspaceFolder}/frontReact"
+            },
+            "runOptions": {
+                "runOn": "folderOpen"
+            },
+            "problemMatcher": [],
+            "detail": "Ejecuta npm run dep en el directorio frontReact al abrir el proyecto."
+        }
+    ]
+}
