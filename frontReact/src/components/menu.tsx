@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 interface MenuProps {
     children?: React.ReactNode;
@@ -226,9 +227,10 @@ export function Menu({ children }: MenuProps) {
                             </a>
                         </li>
                         {/* Users */}
+
                         <li>
                             <a
-                                href="#"
+
                                 className="flex items-center p-2 text-gray-800 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200 group"
                             >
                                 <svg className="w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-300 dark:group-hover:text-blue-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
@@ -238,7 +240,9 @@ export function Menu({ children }: MenuProps) {
 
                                 <span className="flex-1 ms-3 text-gray-800 font-semibold dark:group-hover:text-blue-600">Reportes y Estadisticas</span>
                             </a>
+
                         </li>
+
                         {/* Products */}
                         <li>
                             <a
@@ -312,40 +316,44 @@ export function Menu({ children }: MenuProps) {
                             )}
                         </li>
                         {/* Sign In */}
-                        <li>
-                            <a
-                                href="#"
-                                className="flex items-center p-2 text-gray-800 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200 group"
-                            >
-                                <svg
-                                    className=" w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-300 dark:group-hover:text-blue-600"
-                                    aria-hidden="true"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 18 16"
+                        <Link to="/login">
+                            <li>
+                                <a
+                                    href="#"
+                                    className="flex items-center p-2 text-gray-800 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200 group"
                                 >
-                                    <path
-                                        stroke="currentColor"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M1 8h11m0 0L8 4m4 4-4 4m4-11h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3"
-                                    />
-                                </svg>
-                                <span className="flex-1 ms-3 text-gray-800 font-semibold dark:group-hover:text-blue-600">Cerrar Sesión</span>
-                            </a>
-                        </li>
+                                    <svg
+                                        className=" w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-300 dark:group-hover:text-blue-600"
+                                        aria-hidden="true"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 18 16"
+                                    >
+                                        <path
+                                            stroke="currentColor"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M1 8h11m0 0L8 4m4 4-4 4m4-11h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3"
+                                        />
+                                    </svg>
+                                    <span className="flex-1 ms-3 text-gray-800 font-semibold dark:group-hover:text-blue-600">Cerrar Sesión</span>
+                                </a>
+                            </li>
+                        </Link>
                     </ul>
                 </div>
-            </aside>
+            </aside >
 
             {/* Overlay for mobile */}
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 z-30 bg-gray-800 bg-opacity-50 sm:hidden"
-                    onClick={toggleSidebar}
-                ></div>
-            )}
+            {
+                sidebarOpen && (
+                    <div
+                        className="fixed inset-0 z-30 bg-gray-800 bg-opacity-50 sm:hidden"
+                        onClick={toggleSidebar}
+                    ></div>
+                )
+            }
 
             {/* Main content */}
             <div className="p-4 sm:ml-64 mt-14">
