@@ -4,7 +4,7 @@
         {
             "label": "Ejecutar dep en frontReact",
             "type": "shell",
-            "command": "npm run dep",
+            "command": "npm run dev",
             "options": {
                 "cwd": "${workspaceFolder}/frontReact"
             },
