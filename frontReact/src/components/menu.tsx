@@ -160,7 +160,7 @@ export function Menu({ children }: MenuProps) {
                             <button
                                 type="button"
                                 onClick={toggleInventario}
-                                className="flex items-center w-full p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200 group"
+                                className="flex items-center cursor-pointer w-full p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200 group"
                             >
                                 <svg className="w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-300 dark:group-hover:text-blue-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                                     <path fill-rule="evenodd" d="M14 7h-4v3a1 1 0 0 1-2 0V7H6a1 1 0 0 0-.997.923l-.917 11.924A2 2 0 0 0 6.08 22h11.84a2 2 0 0 0 1.994-2.153l-.917-11.924A1 1 0 0 0 18 7h-2v3a1 1 0 1 1-2 0V7Zm-2-3a2 2 0 0 0-2 2v1H8V6a4 4 0 0 1 8 0v1h-2V6a2 2 0 0 0-2-2Z" clip-rule="evenodd" />
@@ -184,30 +184,20 @@ export function Menu({ children }: MenuProps) {
                             </button>
                             {inventarioOpen && (
                                 <ul className="py-2 space-y-2">
+                                    <Link to="/inventory">
+                                        <li>
+                                            <a className="flex items-center w-full p-2 text-gray-700 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 hover:text-blue-600 dark:text-gray-600 dark:hover:bg-gray-200">
+                                                Productos
+                                            </a>
+                                        </li>
+                                    </Link>
+
                                     <li>
-                                        <a
-                                            href="#"
-                                            className="flex items-center w-full p-2 text-gray-700 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 hover:text-blue-600 dark:text-gray-600 dark:hover:bg-gray-200"
-                                        >
-                                            Productos
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a
-                                            href="#"
-                                            className="flex items-center w-full p-2 text-gray-700 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 hover:text-blue-600 dark:text-gray-600 dark:hover:bg-gray-200"
-                                        >
+                                        <a href=" " className="flex items-center w-full p-2 text-gray-700 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 hover:text-blue-600 dark:text-gray-600 dark:hover:bg-gray-200">
                                             Categorías
                                         </a>
                                     </li>
-                                    <li>
-                                        <a
-                                            href="#"
-                                            className="flex items-center w-full p-2 text-gray-700 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 hover:text-blue-600 dark:text-gray-600 dark:hover:bg-gray-200"
-                                        >
-                                            Proveedores
-                                        </a>
-                                    </li>
+
                                 </ul>
                             )}
                         </li>
@@ -231,7 +221,7 @@ export function Menu({ children }: MenuProps) {
                         <li>
                             <a
 
-                                className="flex items-center p-2 text-gray-800 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200 group"
+                                className="flex items-center cursor-pointer p-2 text-gray-800 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200 group"
                             >
                                 <svg className="w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-300 dark:group-hover:text-blue-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M13.5 2c-.178 0-.356.013-.492.022l-.074.005a1 1 0 0 0-.934.998V11a1 1 0 0 0 1 1h7.975a1 1 0 0 0 .998-.934l.005-.074A7.04 7.04 0 0 0 22 10.5 8.5 8.5 0 0 0 13.5 2Z" />
@@ -258,7 +248,7 @@ export function Menu({ children }: MenuProps) {
                             <button
                                 type="button"
                                 onClick={toggleGestion}
-                                className="flex items-center w-full p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200 group"
+                                className="flex items-center cursor-pointer w-full p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200 group"
                             >
                                 <svg
                                     className="w-7 h-7 text-gray-500 transition duration-75 group-hover:text-gray-300 dark:group-hover:text-blue-600"

@@ -5,4 +5,8 @@
     html {
         font-family: 'Inter', sans-serif;
     }
+
+    body {
+        background-color: rgba(247, 247, 247, 0.89)
+    }
 }
