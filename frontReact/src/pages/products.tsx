@@ -1,7 +1,34 @@
 import { Menu } from "../components/menu";
 import { useState } from "react";
+import { supabase } from "../supabase-client";
 
 export function Products() {
+    const [newProduct, setNewProduct] = useState({
+        codigo_barras: "",
+        nombre: "",
+    });
+
+    const handleSubmit = async (e: any) => {
+        e.preventDefault();
+        try {
+            const { data, error } = await supabase.from('Productos').insert(newProduct).single(); // Inserta el nuevo producto y espera la respuesta
+            if (error) {
+                console.error('Error al agregar el producto:', error); //es posible que el async lanze una excepcion lo cual se captura en el catch para que no se rompa la apliacion
+            } else {
+                console.log('Producto agregado exitosamente:', data);
+                setNewProduct({ codigo_barras: "", nombre: "", });
+            }
+        } catch (error) { // Captura y muestra cualquier error que pueda ocurrir posiblemente un error de internet o de base de datos
+            console.error('Error al agregar el producto:', error) // sirve para asegurar que se muestra el error en la consola
+        }
+    };
+
+
+
+
+
+
+
     // Estado para almacenar la URL de la imagen en base64 y mostrar la vista previa
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [currentStock, setCurrentStock] = useState<number>(0);
@@ -74,7 +101,7 @@ export function Products() {
                     <p className="text-gray-500 mt-1">Completa la información del producto para agregarlo a tu inventario.</p>
                 </div>
 
-                <form className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Form Container: Descripción del Producto */}
                     <div className="bg-white border rounded-xl shadow-sm border-gray-200">
                         {/* Section Title */}
@@ -91,6 +118,7 @@ export function Products() {
                                         Codigo de Barras
                                     </label>
                                     <input
+                                        onChange={(e) => setNewProduct({ ...newProduct, codigo_barras: e.target.value })}
                                         type="text"
                                         id="productName"
                                         name="productName"
@@ -104,6 +132,7 @@ export function Products() {
                                         Nombre del Producto
                                     </label>
                                     <input
+                                        onChange={(e) => setNewProduct({ ...newProduct, nombre: e.target.value })}
                                         type="text"
                                         id="productName"
                                         name="productName"
