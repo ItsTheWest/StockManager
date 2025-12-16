@@ -150,7 +150,7 @@ export function Menu({ children }: MenuProps) {
                                 className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200 group"
                             >
                                 <svg className="w-6 h-6  text-gray-500   dark:group-hover:text-blue-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                    <path fill-rule="evenodd" d="M11.293 3.293a1 1 0 0 1 1.414 0l6 6 2 2a1 1 0 0 1-1.414 1.414L19 12.414V19a2 2 0 0 1-2 2h-3a1 1 0 0 1-1-1v-3h-2v3a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2v-6.586l-.293.293a1 1 0 0 1-1.414-1.414l2-2 6-6Z" clip-rule="evenodd" />
+                                    <path fillRule="evenodd" d="M11.293 3.293a1 1 0 0 1 1.414 0l6 6 2 2a1 1 0 0 1-1.414 1.414L19 12.414V19a2 2 0 0 1-2 2h-3a1 1 0 0 1-1-1v-3h-2v3a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2v-6.586l-.293.293a1 1 0 0 1-1.414-1.414l2-2 6-6Z" clipRule="evenodd" />
                                 </svg>
                                 <span className="ms-3 text-gray-800 font-semibold dark:group-hover:text-blue-600">Inicio</span>
                             </a>
@@ -163,7 +163,7 @@ export function Menu({ children }: MenuProps) {
                                 className="flex items-center cursor-pointer w-full p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200 group"
                             >
                                 <svg className="w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-300 dark:group-hover:text-blue-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                    <path fill-rule="evenodd" d="M14 7h-4v3a1 1 0 0 1-2 0V7H6a1 1 0 0 0-.997.923l-.917 11.924A2 2 0 0 0 6.08 22h11.84a2 2 0 0 0 1.994-2.153l-.917-11.924A1 1 0 0 0 18 7h-2v3a1 1 0 1 1-2 0V7Zm-2-3a2 2 0 0 0-2 2v1H8V6a4 4 0 0 1 8 0v1h-2V6a2 2 0 0 0-2-2Z" clip-rule="evenodd" />
+                                    <path fillRule="evenodd" d="M14 7h-4v3a1 1 0 0 1-2 0V7H6a1 1 0 0 0-.997.923l-.917 11.924A2 2 0 0 0 6.08 22h11.84a2 2 0 0 0 1.994-2.153l-.917-11.924A1 1 0 0 0 18 7h-2v3a1 1 0 1 1-2 0V7Zm-2-3a2 2 0 0 0-2 2v1H8V6a4 4 0 0 1 8 0v1h-2V6a2 2 0 0 0-2-2Z" clipRule="evenodd" />
                                 </svg>
                                 <span className="flex-1 ms-3 text-left text-gray-800 font-semibold dark:group-hover:text-blue-600">Productos</span>
                                 <svg
@@ -184,20 +184,21 @@ export function Menu({ children }: MenuProps) {
                             </button>
                             {inventarioOpen && (
                                 <ul className="py-2 space-y-2">
-                                    <Link to="/inventory">
-                                        <li>
-                                            <a className="flex items-center w-full p-2 text-gray-700 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 hover:text-blue-600 dark:text-gray-600 dark:hover:bg-gray-200">
-                                                Inventario
-                                            </a>
-                                        </li>
-                                    </Link>
-                                    <Link to="/addproducts">
-                                        <li>
-                                            <a href=" " className="flex items-center w-full p-2 text-gray-700 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 hover:text-blue-600 dark:text-gray-600 dark:hover:bg-gray-200">
-                                                Agregar Producto
-                                            </a>
-                                        </li>
-                                    </Link>
+                                    <li>
+                                        <Link to="/inventory" className="flex items-center w-full p-2 text-gray-700 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 hover:text-blue-600 dark:text-gray-600 dark:hover:bg-gray-200">
+                                            Inventario
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link to="/categories" className="flex items-center w-full p-2 text-gray-700 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 hover:text-blue-600 dark:text-gray-600 dark:hover:bg-gray-200">
+                                            Categorias
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link to="/providers" className="flex items-center w-full p-2 text-gray-700 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 hover:text-blue-600 dark:text-gray-600 dark:hover:bg-gray-200">
+                                            Proveedores
+                                        </Link>
+                                    </li>
 
                                 </ul>
                             )}
@@ -240,7 +241,7 @@ export function Menu({ children }: MenuProps) {
                                 href="#"
                                 className="flex items-center p-2 text-gray-800 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200 group"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-settings-icon lucide-settings  text-gray-800 font-semibold dark:group-hover:text-blue-600"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-settings-icon lucide-settings  text-gray-800 font-semibold dark:group-hover:text-blue-600"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg>
                                 <span className="flex-1 ms-3 text-gray-800 font-semibold dark:group-hover:text-blue-600">Configuraciones</span>
                             </a>
                         </li>
@@ -307,31 +308,26 @@ export function Menu({ children }: MenuProps) {
                             )}
                         </li>
                         {/* Sign In */}
-                        <Link to="/login">
-                            <li>
-                                <a
-                                    href="#"
-                                    className="flex items-center p-2 text-gray-800 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200 group"
+                        <li>
+                            <Link to="/login" className="flex items-center p-2 text-gray-800 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200 group">
+                                <svg
+                                    className=" w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-300 dark:group-hover:text-blue-600"
+                                    aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 18 16"
                                 >
-                                    <svg
-                                        className=" w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-300 dark:group-hover:text-blue-600"
-                                        aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 18 16"
-                                    >
-                                        <path
-                                            stroke="currentColor"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M1 8h11m0 0L8 4m4 4-4 4m4-11h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3"
-                                        />
-                                    </svg>
-                                    <span className="flex-1 ms-3 text-gray-800 font-semibold dark:group-hover:text-blue-600">Cerrar Sesión</span>
-                                </a>
-                            </li>
-                        </Link>
+                                    <path
+                                        stroke="currentColor"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M1 8h11m0 0L8 4m4 4-4 4m4-11h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3"
+                                    />
+                                </svg>
+                                <span className="flex-1 ms-3 text-gray-800 font-semibold dark:group-hover:text-blue-600">Cerrar Sesión</span>
+                            </Link>
+                        </li>
                     </ul>
                 </div>
             </aside >

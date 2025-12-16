@@ -1,27 +1,47 @@
 import { Menu } from "../components/menu";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../supabase-client";
 
 export function Products() {
     const [newProduct, setNewProduct] = useState({
         codigo_barras: "",
         nombre: "",
+        descripcion: "",
+        tipo_producto: "",
+        estado: "",
     });
+    const [categories, setCategories] = useState<any[]>([]);
 
     const handleSubmit = async (e: any) => {
-        e.preventDefault();
+        e.preventDefault(); // Previene el comportamiento por defecto del formulario
         try {
-            const { data, error } = await supabase.from('Productos').insert(newProduct).single(); // Inserta el nuevo producto y espera la respuesta
+            const { error } = await supabase.from('Productos').insert(newProduct).single();
+            // Inserta el nuevo producto y espera la respuesta
             if (error) {
                 console.error('Error al agregar el producto:', error); //es posible que el async lanze una excepcion lo cual se captura en el catch para que no se rompa la apliacion
             } else {
-                console.log('Producto agregado exitosamente:', data);
-                setNewProduct({ codigo_barras: "", nombre: "", });
+                setNewProduct({ codigo_barras: "", nombre: "", descripcion: "", tipo_producto: "", estado: "" });
+                e.target.reset();
+                console.log('Producto agregado exitosamente:', newProduct.nombre); //uso nweproduct ya que es el estado que se esta utilizando para guardar los datos del nuevo producto
             }
         } catch (error) { // Captura y muestra cualquier error que pueda ocurrir posiblemente un error de internet o de base de datos
             console.error('Error al agregar el producto:', error) // sirve para asegurar que se muestra el error en la consola
         }
     };
+
+    const getCategories = async () => {
+        const { error, data } = await supabase.from('Categorias').select('*').order('nombre', { ascending: true });
+        if (error) {
+            console.error('Error al obtener las categorías:', error);
+            return
+        }
+        setCategories(data);
+    };
+
+    useEffect(() => {
+        getCategories();
+    }, []);
+
 
 
 
@@ -111,7 +131,6 @@ export function Products() {
 
                         {/* Content */}
                         <div className="p-6">
-                            {/* Row 1: Product Name and Category */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div>
                                     <label htmlFor="productName" className="block text-base font-medium text-gray-700 mb-2">
@@ -142,7 +161,6 @@ export function Products() {
                                 </div>
                             </div>
 
-                            {/* Row 2: Brand and Color */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div>
                                     <label htmlFor="brand" className="block text-base font-medium text-gray-700 mb-2">
@@ -150,13 +168,14 @@ export function Products() {
                                     </label>
                                     <div className="relative">
                                         <select
-                                            id="brand"
-                                            name="brand"
+                                            id="tipo"
+                                            name="tipo"
+                                            onChange={(e) => setNewProduct({ ...newProduct, tipo_producto: e.target.value })}
                                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none bg-white"
                                         >
                                             <option value="">Seleccione</option>
-                                            <option value="apple">Simple</option>
-                                            <option value="samsung">Kit / Combo</option>
+                                            <option value="simple">Simple</option>
+                                            <option value="combo">Kit / Combo</option>
                                         </select>
                                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
                                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,12 +193,13 @@ export function Products() {
                                         <select
                                             id="color"
                                             name="color"
+                                            onChange={(e) => setNewProduct({ ...newProduct, estado: e.target.value })}
                                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none bg-white"
                                         >
-                                            <option value="">Seleccione</option>
-                                            <option value="apple">Activo</option>
-                                            <option value="samsung">Inactivo</option>
-                                            <option value="samsung">Descontinuado</option>
+                                            <option >Seleccione</option>
+                                            <option value="activo">Activo</option>
+                                            <option value="inactivo">Inactivo</option>
+                                            <option value="descontinuado">Descontinuado</option>
                                         </select>
                                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
                                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -199,6 +219,7 @@ export function Products() {
                                     <textarea
                                         id="description"
                                         name="description"
+                                        onChange={(e) => setNewProduct({ ...newProduct, descripcion: e.target.value })}
                                         placeholder="Ingrese la descripción del producto (opcional)"
                                         rows={6}
                                         className="w-full flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
@@ -316,13 +337,26 @@ export function Products() {
                                     <label htmlFor="category" className="block text-base font-medium text-gray-700 mb-2">
                                         Categoría
                                     </label>
-                                    <input
-                                        type="text"
-                                        id="category"
-                                        name="category"
-                                        placeholder="Ingrese la categoría"
-                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                                    />
+                                    <div className="relative">
+
+                                        <select
+                                            id="category"
+                                            name="category"
+                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none bg-white"
+                                        >
+                                            <option value="">Seleccione una categoría</option>
+                                            {categories.map((category, key) => (
+                                                <option key={key} value={category.id}>
+                                                    {category.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                                            </svg>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div>

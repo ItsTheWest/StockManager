@@ -149,38 +149,26 @@ export function Inventory() {
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr className="bg-white border-b border-gray-100">
-                                        <th className="p-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                            <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
-                                                Productos
-                                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 16l-6-6h12l-6 6z" /></svg>
-                                            </div>
+                                    <tr className="bg-blue-600 border-b border-blue-600">
+                                        <th className="p-5 text-xs font-semibold text-white uppercase tracking-wider text-center">
+                                            Productos
                                         </th>
-                                        <th className="p-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                            <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
-                                                Categoría
-                                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 16l-6-6h12l-6 6z" /></svg>
-                                            </div>
+                                        <th className="p-5 text-xs font-semibold text-white uppercase tracking-wider text-center">
+                                            Categoría
                                         </th>
-                                        <th className="p-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                            <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
-                                                Marca
-                                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 16l-6-6h12l-6 6z" /></svg>
-                                            </div>
+                                        <th className="p-5 text-xs font-semibold text-white uppercase tracking-wider text-center">
+                                            Marca
                                         </th>
-                                        <th className="p-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                            <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
-                                                Precio
-                                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 16l-6-6h12l-6 6z" /></svg>
-                                            </div>
+                                        <th className="p-5 text-xs font-semibold text-white uppercase tracking-wider text-center">
+                                            Precio
                                         </th>
-                                        <th className="p-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock</th>
-                                        <th className="p-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha de Creación</th>
+                                        <th className="p-5 text-xs font-semibold text-white uppercase tracking-wider text-center">Stock</th>
+                                        <th className="p-5 text-xs font-semibold text-white uppercase tracking-wider text-center">Fecha de Creación</th>
                                         <th className="p-5"></th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    {initialProducts.map((product) => (
+                                    {initialProducts.map((product, index) => (
                                         <tr key={product.id} className="hover:bg-gray-50 transition-colors group">
                                             <td className="p-5">
                                                 <div className="flex items-center gap-4">
@@ -199,7 +187,7 @@ export function Inventory() {
                                                 </span>
                                             </td>
                                             <td className="p-5 text-gray-600">{product.createdAt}</td>
-                                            <td className="p-5 text-right relative">
+                                            <td className={`p-5 text-right relative ${openActionMenuId === product.id ? "z-20" : "z-0"}`}>
                                                 <button
                                                     onClick={(e) => toggleActionMenu(product.id, e)}
                                                     className="text-gray-400 cursor-pointer hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
@@ -215,19 +203,36 @@ export function Inventory() {
                                                 {openActionMenuId === product.id && (
                                                     <div
                                                         ref={menuRef}
-                                                        className="absolute right-8 top-8 w-36 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-1 animation-fade-in"
+                                                        className={`absolute right-8 w-40 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-1 animation-fade-in ${index >= initialProducts.length - 2 ? "bottom-8 origin-bottom-right" : "top-8 origin-top-right"
+                                                            }`}
                                                         style={{ animation: "fadeIn 0.2s ease-out" }}
                                                     >
                                                         <button
-                                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                            className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-2"
                                                             onClick={(e) => { e.stopPropagation(); setOpenActionMenuId(null); }}
                                                         >
+                                                            <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                            </svg>
                                                             Ver detalles
                                                         </button>
                                                         <button
-                                                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                                            className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2"
                                                             onClick={(e) => { e.stopPropagation(); setOpenActionMenuId(null); }}
                                                         >
+                                                            <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                            </svg>
+                                                            Editar
+                                                        </button>
+                                                        <button
+                                                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                                                            onClick={(e) => { e.stopPropagation(); setOpenActionMenuId(null); }}
+                                                        >
+                                                            <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                            </svg>
                                                             Eliminar
                                                         </button>
                                                     </div>
