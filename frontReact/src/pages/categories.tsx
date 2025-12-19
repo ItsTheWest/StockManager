@@ -60,6 +60,7 @@ export function Categorias() {
     };
 
 
+
     const [openActionMenuId, setOpenActionMenuId] = useState<number | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -174,17 +175,15 @@ export function Categorias() {
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr className="bg-white border-b border-gray-100">
-                                        <th className="p-5 text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/4">
-                                            <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
+                                    <tr className="bg-blue-600 border-b border-blue-600">
+                                        <th className="p-5 text-xs font-semibold text-white uppercase tracking-wider text-center w-1/4">
+                                            <div className="flex items-center justify-center gap-1 cursor-pointer hover:text-gray-200">
                                                 Nombre
-
                                             </div>
                                         </th>
-                                        <th className="p-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                            <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
+                                        <th className="p-5 text-xs font-semibold text-white uppercase tracking-wider text-center">
+                                            <div className="flex items-center justify-center gap-1 cursor-pointer hover:text-gray-200">
                                                 Descripción
-
                                             </div>
                                         </th>
                                         <th className="p-5 w-20"></th>

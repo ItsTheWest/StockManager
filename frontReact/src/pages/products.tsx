@@ -9,26 +9,123 @@ export function Products() {
         descripcion: "",
         tipo_producto: "",
         estado: "",
+        id_categoria: "",
+        marca: "",
+        ubicacion: "",
+        costo_monto: "",
+        precio_monto: "",
+        margen_ganancia: "",
+        stock: "",
+        stock_minimo: "",
+        id_costo_moneda: "",
+        id_precio_moneda: "",
     });
-    const [categories, setCategories] = useState<any[]>([]);
+
+
+
+
+
+
 
     const handleSubmit = async (e: any) => {
-        e.preventDefault(); // Previene el comportamiento por defecto del formulario
+        e.preventDefault(); // Previene el recargo de la página al enviar el formulario
+
         try {
-            const { error } = await supabase.from('Productos').insert(newProduct).single();
-            // Inserta el nuevo producto y espera la respuesta
-            if (error) {
-                console.error('Error al agregar el producto:', error); //es posible que el async lanze una excepcion lo cual se captura en el catch para que no se rompa la apliacion
-            } else {
-                setNewProduct({ codigo_barras: "", nombre: "", descripcion: "", tipo_producto: "", estado: "" });
-                e.target.reset();
-                console.log('Producto agregado exitosamente:', newProduct.nombre); //uso nweproduct ya que es el estado que se esta utilizando para guardar los datos del nuevo producto
+            let imageUrl = null;
+
+            // Paso 1: Subir la imagen a Supabase Storage si el usuario seleccionó una
+            if (imageFile) {
+                // Generamos un nombre de archivo único usando la fecha actual para evitar duplicados
+                const fileExt = imageFile.name.split('.').pop(); // Obtiene la extensión del archivo el pop toma el utlimo elemento cortado por split 
+                const fileName = `${Date.now()}.${fileExt}`; // Genera un nombre de archivo único
+                const filePath = `${fileName}`; // Ruta dentro del bucket
+
+                // Subimos el archivo al bucket 
+                const { error: uploadError } = await supabase.storage.from('imagenesproductos').upload(filePath, imageFile);
+
+                if (uploadError) {
+                    throw new Error(`Error al subir imagen: ${uploadError.message}`);
+                }
+
+                // Obtenemos la URL pública para guardarla en la base de datos
+                const { data } = supabase.storage.from('imagenesproductos').getPublicUrl(filePath);
+
+                imageUrl = data.publicUrl;
             }
-        } catch (error) { // Captura y muestra cualquier error que pueda ocurrir posiblemente un error de internet o de base de datos
-            console.error('Error al agregar el producto:', error) // sirve para asegurar que se muestra el error en la consola
+
+            // Paso 2: Preparar el objeto del producto incluyendo la URL de la imagen
+            // Usamos spread operator (...) para copiar las propiedades existentes de newProduct
+            const productToSave = {
+                ...newProduct,
+                imagen: imageUrl // Asignamos la URL al campo 'imagen' que espera la tabla
+            };
+
+            // Paso 3: Insertar el producto en la tabla 'Productos'
+            // Usamos .select().single() para obtener los datos del registro insertado, incluyendo el ID generado
+            const { data: productData, error: productError } = await supabase
+                .from('Productos')
+                .insert(productToSave)
+                .select()
+                .single();
+
+            if (productError) {
+                console.error('Error al guardar en base de datos:', productError);
+                throw productError;
+            }
+
+            // Paso 4: Insertar en la tabla de detalles (Detalle_Productos)
+            if (productData) {
+                // Preparamos el objeto de detalle con el ID del producto recién creado
+                // Aseguramos que sea un número válido o null para evitar errores de tipo
+                const detailToSave = {
+                    id_producto: productData.id,
+                };
+
+                const { error: detailError } = await supabase
+                    .from('Detalle_Productos')
+                    .insert(detailToSave);
+
+                if (detailError) {
+                    console.error('Error al guardar el detalle del producto:', detailError);
+                    // No lanzamos error aquí para no interrumpir el flujo de éxito del producto, pero podrías manejarlo según necesidad
+                }
+            } else {
+                // Si todo sale bien, reseteamos el formulario y los estados
+                setNewProduct({
+                    codigo_barras: "",
+                    nombre: "",
+                    descripcion: "",
+                    tipo_producto: "",
+                    estado: "",
+                    id_categoria: "",
+                    marca: "",
+                    ubicacion: "",
+                    costo_monto: "",
+                    precio_monto: "",
+                    margen_ganancia: "",
+                    stock: "",
+                    stock_minimo: "",
+                    id_costo_moneda: "",
+                    id_precio_moneda: "",
+                });
+                setImagePreview(null);
+                setImageFile(null); // Limpiamos el archivo seleccionado
+                setCurrentStock(0);
+                setMinStock(0);
+
+                // Reseteamos el formulario HTML
+                e.target.reset(); // Esto limpia los inputs que no están controlados por React si los hubiera
+
+                console.log('Producto agregado exitosamente:', productToSave.nombre);
+                alert("Producto agregado exitosamente");
+            }
+        } catch (error) {
+            console.error('Error general:', error);
+            alert("Ocurrió un error al procesar la solicitud");
         }
     };
 
+    const [categories, setCategories] = useState<any[]>([]);
     const getCategories = async () => {
         const { error, data } = await supabase.from('Categorias').select('*').order('nombre', { ascending: true });
         if (error) {
@@ -43,24 +140,23 @@ export function Products() {
     }, []);
 
 
-
-
-
-
-
-
     // Estado para almacenar la URL de la imagen en base64 y mostrar la vista previa
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    // Estado para almacenar el archivo de imagen real que se subirá a Supabase Storage
+    const [imageFile, setImageFile] = useState<File | null>(null);
+
     const [currentStock, setCurrentStock] = useState<number>(0);
     const [minStock, setMinStock] = useState<number>(0);
-    const [costCurrency, setCostCurrency] = useState<string>("Bs");
-    const [saleCurrency, setSaleCurrency] = useState<string>("Bs");
+
 
     // Funcion que se ejecuta cuando el usuario selecciona un archivo mediante el input
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         // Accedemos al primer archivo seleccionado por el usuario
         const file = e.target.files?.[0];
         if (file) {
+            // Guardamos el archivo en el estado para usarlo posteriormente en la subida
+            setImageFile(file);
+
             // Creamos una instancia de FileReader para leer el contenido del archivo
             const reader = new FileReader();
             // Definimos que hacer cuando la lectura del archivo termine exitosamente
@@ -92,6 +188,9 @@ export function Products() {
         const file = e.dataTransfer.files?.[0];
         // Verificamos que exista el archivo y que sea de tipo imagen
         if (file && file.type.startsWith('image/')) {
+            // Guardamos el archivo en el estado
+            setImageFile(file);
+
             const reader = new FileReader();
             reader.onloadend = () => {
                 // Actualizamos la vista previa con la imagen leida
@@ -102,10 +201,12 @@ export function Products() {
     };
 
     // Funcion para eliminar la imagen seleccionada y limpiar el estado
+    // Funcion para eliminar la imagen seleccionada y limpiar el estado
     const handleRemoveImage = () => {
         setImagePreview(null);
+        setImageFile(null); // Limpiamos también el estado del archivo
+
         // Reseteamos el valor del input file para permitir seleccionar la misma imagen nuevamente si el usuario lo desea
-        // Esto es necesario porque si el valor onchange no cambia, el evento no se dispara
         const fileInput = document.getElementById('fileInput') as HTMLInputElement;
         if (fileInput) {
             fileInput.value = '';
@@ -342,10 +443,11 @@ export function Products() {
                                         <select
                                             id="category"
                                             name="category"
+                                            onChange={(e) => setNewProduct({ ...newProduct, id_categoria: e.target.value })}
                                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none bg-white"
                                         >
                                             <option value="">Seleccione una categoría</option>
-                                            {categories.map((category, key) => (
+                                            {categories.map((category, key) => ( // map funciona para recorrer un array
                                                 <option key={key} value={category.id}>
                                                     {category.nombre}
                                                 </option>
@@ -367,7 +469,8 @@ export function Products() {
                                         type="text"
                                         id="brandName"
                                         name="brandName"
-                                        placeholder="Ingrese la marca"
+                                        onChange={(e) => setNewProduct({ ...newProduct, marca: e.target.value })}
+                                        placeholder="Ingrese la marca (opcional)"
                                         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                     />
                                 </div>
@@ -386,8 +489,9 @@ export function Products() {
                                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none bg-white"
                                         >
                                             <option value="">Seleccione un proveedor</option>
-                                            <option value="supplier1">Proveedor Principal A</option>
-                                            <option value="supplier2">Proveedor Principal B</option>
+                                            {/* TODO: Cargar proveedores dinámicamente de la base de datos */}
+                                            <option value="1">Proveedor Principal A (ID: 1)</option>
+                                            <option value="2">Proveedor Principal B (ID: 2)</option>
                                         </select>
                                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
                                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -405,6 +509,7 @@ export function Products() {
                                         type="text"
                                         id="location"
                                         name="location"
+                                        onChange={(e) => setNewProduct({ ...newProduct, ubicacion: e.target.value })}
                                         placeholder="Ingrese la ubicación (Ej: Pasillo 3, Estante B)"
                                         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                     />
@@ -434,16 +539,17 @@ export function Products() {
                                             type="number"
                                             id="acquisitionCost"
                                             name="acquisitionCost"
+                                            onChange={(e) => setNewProduct({ ...newProduct, costo_monto: e.target.value })}
                                             placeholder="0.00 "
                                             className="flex-1 px-4 py-2.5 border border-gray-300 rounded-l-lg border-r-0 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                         />
                                         <select
-                                            value={costCurrency}
-                                            onChange={(e) => setCostCurrency(e.target.value)}
+
+                                            onChange={(e) => setNewProduct({ ...newProduct, id_costo_moneda: e.target.value })}
                                             className="px-3 py-2.5 border border-gray-300 bg-gray-50 text-gray-600 font-medium rounded-r-lg hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer"
                                         >
-                                            <option value="Bs">Bs</option>
-                                            <option value="USD">$</option>
+                                            <option value="2">Bs</option>
+                                            <option value="1">$</option>
                                         </select>
                                     </div>
                                 </div>
@@ -458,16 +564,16 @@ export function Products() {
                                             type="number"
                                             id="salePrice"
                                             name="salePrice"
+                                            onChange={(e) => setNewProduct({ ...newProduct, precio_monto: e.target.value })}
                                             placeholder="0.00"
                                             className="flex-1 px-4 py-2.5 border border-gray-300 rounded-l-lg border-r-0 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                         />
                                         <select
-                                            value={saleCurrency}
-                                            onChange={(e) => setSaleCurrency(e.target.value)}
+                                            onChange={(e) => setNewProduct({ ...newProduct, id_precio_moneda: e.target.value })}
                                             className="px-3 py-2.5 border border-gray-300 bg-gray-50 text-gray-600 font-medium rounded-r-lg hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer"
                                         >
-                                            <option value="Bs">Bs</option>
-                                            <option value="USD">$</option>
+                                            <option value="2">Bs</option>
+                                            <option value="1">$</option>
                                         </select>
                                     </div>
                                 </div>
@@ -485,6 +591,7 @@ export function Products() {
                                             type="number"
                                             id="profitMargin"
                                             name="profitMargin"
+                                            onChange={(e) => setNewProduct({ ...newProduct, margen_ganancia: e.target.value })}
                                             max="100"
                                             min="0"
                                             placeholder="(Campo opcional)"
@@ -513,8 +620,7 @@ export function Products() {
                                         </button>
                                         <input
                                             type="number"
-                                            value={currentStock}
-                                            onChange={(e) => setCurrentStock(parseInt(e.target.value) || 0)}
+                                            onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
                                             className="w-full text-center border-none py-2.5 focus:ring-0 outline-none appearance-none"
                                         />
                                         <button
@@ -546,8 +652,7 @@ export function Products() {
                                         </button>
                                         <input
                                             type="number"
-                                            value={minStock}
-                                            onChange={(e) => setMinStock(parseInt(e.target.value) || 0)}
+                                            onChange={e => setNewProduct({ ...newProduct, stock_minimo: e.target.value })}
                                             className="w-full text-center border-none py-2.5 focus:ring-0 outline-none appearance-none"
                                         />
                                         <button
