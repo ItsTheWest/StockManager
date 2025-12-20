@@ -17,8 +17,8 @@ export function Products() {
         margen_ganancia: "",
         stock: "",
         stock_minimo: "",
-        id_costo_moneda: "",
-        id_precio_moneda: "",
+        id_costo_moneda: "2",
+        id_precio_moneda: "2",
     });
 
 
@@ -54,7 +54,7 @@ export function Products() {
             }
 
             // Paso 2: Preparar el objeto del producto incluyendo la URL de la imagen
-            // Usamos spread operator (...) para copiar las propiedades existentes de newProduct
+            // Convertimos los valores string a números o null para evitar errores de tipo bigint
             const productToSave = {
                 ...newProduct,
                 imagen: imageUrl // Asignamos la URL al campo 'imagen' que espera la tabla
@@ -89,7 +89,7 @@ export function Products() {
                     console.error('Error al guardar el detalle del producto:', detailError);
                     // No lanzamos error aquí para no interrumpir el flujo de éxito del producto, pero podrías manejarlo según necesidad
                 }
-            } else {
+
                 // Si todo sale bien, reseteamos el formulario y los estados
                 setNewProduct({
                     codigo_barras: "",
@@ -105,8 +105,8 @@ export function Products() {
                     margen_ganancia: "",
                     stock: "",
                     stock_minimo: "",
-                    id_costo_moneda: "",
-                    id_precio_moneda: "",
+                    id_costo_moneda: "2",
+                    id_precio_moneda: "2",
                 });
                 setImagePreview(null);
                 setImageFile(null); // Limpiamos el archivo seleccionado
@@ -116,8 +116,7 @@ export function Products() {
                 // Reseteamos el formulario HTML
                 e.target.reset(); // Esto limpia los inputs que no están controlados por React si los hubiera
 
-                console.log('Producto agregado exitosamente:', productToSave.nombre);
-                alert("Producto agregado exitosamente");
+                console.log('Producto agregado exitosamente:', productData.nombre);
             }
         } catch (error) {
             console.error('Error general:', error);
@@ -238,6 +237,7 @@ export function Products() {
                                         Codigo de Barras
                                     </label>
                                     <input
+                                        value={newProduct.codigo_barras}
                                         onChange={(e) => setNewProduct({ ...newProduct, codigo_barras: e.target.value })}
                                         type="text"
                                         id="productName"
@@ -252,6 +252,7 @@ export function Products() {
                                         Nombre del Producto
                                     </label>
                                     <input
+                                        value={newProduct.nombre}
                                         onChange={(e) => setNewProduct({ ...newProduct, nombre: e.target.value })}
                                         type="text"
                                         id="productName"
@@ -271,6 +272,7 @@ export function Products() {
                                         <select
                                             id="tipo"
                                             name="tipo"
+                                            value={newProduct.tipo_producto}
                                             onChange={(e) => setNewProduct({ ...newProduct, tipo_producto: e.target.value })}
                                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none bg-white"
                                         >
@@ -294,6 +296,7 @@ export function Products() {
                                         <select
                                             id="color"
                                             name="color"
+                                            value={newProduct.estado}
                                             onChange={(e) => setNewProduct({ ...newProduct, estado: e.target.value })}
                                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none bg-white"
                                         >
@@ -320,6 +323,7 @@ export function Products() {
                                     <textarea
                                         id="description"
                                         name="description"
+                                        value={newProduct.descripcion}
                                         onChange={(e) => setNewProduct({ ...newProduct, descripcion: e.target.value })}
                                         placeholder="Ingrese la descripción del producto (opcional)"
                                         rows={6}
@@ -443,6 +447,7 @@ export function Products() {
                                         <select
                                             id="category"
                                             name="category"
+                                            value={newProduct.id_categoria}
                                             onChange={(e) => setNewProduct({ ...newProduct, id_categoria: e.target.value })}
                                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none bg-white"
                                         >
@@ -469,6 +474,7 @@ export function Products() {
                                         type="text"
                                         id="brandName"
                                         name="brandName"
+                                        value={newProduct.marca}
                                         onChange={(e) => setNewProduct({ ...newProduct, marca: e.target.value })}
                                         placeholder="Ingrese la marca (opcional)"
                                         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
@@ -509,6 +515,7 @@ export function Products() {
                                         type="text"
                                         id="location"
                                         name="location"
+                                        value={newProduct.ubicacion}
                                         onChange={(e) => setNewProduct({ ...newProduct, ubicacion: e.target.value })}
                                         placeholder="Ingrese la ubicación (Ej: Pasillo 3, Estante B)"
                                         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
@@ -539,12 +546,13 @@ export function Products() {
                                             type="number"
                                             id="acquisitionCost"
                                             name="acquisitionCost"
+                                            value={newProduct.costo_monto}
                                             onChange={(e) => setNewProduct({ ...newProduct, costo_monto: e.target.value })}
                                             placeholder="0.00 "
                                             className="flex-1 px-4 py-2.5 border border-gray-300 rounded-l-lg border-r-0 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                         />
                                         <select
-
+                                            value={newProduct.id_costo_moneda}
                                             onChange={(e) => setNewProduct({ ...newProduct, id_costo_moneda: e.target.value })}
                                             className="px-3 py-2.5 border border-gray-300 bg-gray-50 text-gray-600 font-medium rounded-r-lg hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer"
                                         >
@@ -564,11 +572,13 @@ export function Products() {
                                             type="number"
                                             id="salePrice"
                                             name="salePrice"
+                                            value={newProduct.precio_monto}
                                             onChange={(e) => setNewProduct({ ...newProduct, precio_monto: e.target.value })}
                                             placeholder="0.00"
                                             className="flex-1 px-4 py-2.5 border border-gray-300 rounded-l-lg border-r-0 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                         />
                                         <select
+                                            value={newProduct.id_precio_moneda}
                                             onChange={(e) => setNewProduct({ ...newProduct, id_precio_moneda: e.target.value })}
                                             className="px-3 py-2.5 border border-gray-300 bg-gray-50 text-gray-600 font-medium rounded-r-lg hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer"
                                         >
@@ -591,6 +601,7 @@ export function Products() {
                                             type="number"
                                             id="profitMargin"
                                             name="profitMargin"
+                                            value={newProduct.margen_ganancia}
                                             onChange={(e) => setNewProduct({ ...newProduct, margen_ganancia: e.target.value })}
                                             max="100"
                                             min="0"
@@ -620,6 +631,7 @@ export function Products() {
                                         </button>
                                         <input
                                             type="number"
+                                            value={newProduct.stock}
                                             onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
                                             className="w-full text-center border-none py-2.5 focus:ring-0 outline-none appearance-none"
                                         />
@@ -652,6 +664,7 @@ export function Products() {
                                         </button>
                                         <input
                                             type="number"
+                                            value={newProduct.stock_minimo}
                                             onChange={e => setNewProduct({ ...newProduct, stock_minimo: e.target.value })}
                                             className="w-full text-center border-none py-2.5 focus:ring-0 outline-none appearance-none"
                                         />
