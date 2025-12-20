@@ -192,10 +192,10 @@ export function Categorias() {
                                 <tbody className="divide-y divide-gray-100">
                                     {initialCategories.map((category, index) => (
                                         <tr key={category.id} className="hover:bg-gray-50 transition-colors group">
-                                            <td className="p-5 font-medium text-gray-900">
+                                            <td className="p-5 font-medium text-gray-900 text-center">
                                                 {category.name}
                                             </td>
-                                            <td className="p-5 text-gray-600">
+                                            <td className="p-5 text-gray-600 text-center">
                                                 {category.description}
                                             </td>
                                             <td className={`p-5 text-right relative ${openActionMenuId === category.id ? "z-20" : "z-0"}`}>

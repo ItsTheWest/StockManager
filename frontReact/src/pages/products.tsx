@@ -19,13 +19,8 @@ export function Products() {
         stock_minimo: "",
         id_costo_moneda: "2",
         id_precio_moneda: "2",
+        id_proveedor: "",
     });
-
-
-
-
-
-
 
     const handleSubmit = async (e: any) => {
         e.preventDefault(); // Previene el recargo de la página al enviar el formulario
@@ -55,8 +50,10 @@ export function Products() {
 
             // Paso 2: Preparar el objeto del producto incluyendo la URL de la imagen
             // Convertimos los valores string a números o null para evitar errores de tipo bigint
+            // Extraemos id_proveedor para no enviarlo a la tabla Productos ya que pertenece a Detalle_Productos
+            const { id_proveedor, ...productDataForInsert } = newProduct;
             const productToSave = {
-                ...newProduct,
+                ...productDataForInsert,
                 imagen: imageUrl // Asignamos la URL al campo 'imagen' que espera la tabla
             };
 
@@ -79,6 +76,7 @@ export function Products() {
                 // Aseguramos que sea un número válido o null para evitar errores de tipo
                 const detailToSave = {
                     id_producto: productData.id,
+                    id_proveedor: newProduct.id_proveedor || null,
                 };
 
                 const { error: detailError } = await supabase
@@ -107,6 +105,7 @@ export function Products() {
                     stock_minimo: "",
                     id_costo_moneda: "2",
                     id_precio_moneda: "2",
+                    id_proveedor: "",
                 });
                 setImagePreview(null);
                 setImageFile(null); // Limpiamos el archivo seleccionado
@@ -138,6 +137,19 @@ export function Products() {
         getCategories();
     }, []);
 
+    const [providers, setProviders] = useState<any[]>([]);
+    const getProviders = async () => {
+        const { error, data } = await supabase.from('Proveedores').select('*').order('nombre', { ascending: true });
+        if (error) {
+            console.error('Error al obtener los proveedores:', error);
+            return
+        }
+        setProviders(data);
+    };
+
+    useEffect(() => {
+        getProviders();
+    }, []);
 
     // Estado para almacenar la URL de la imagen en base64 y mostrar la vista previa
     const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -233,30 +245,30 @@ export function Products() {
                         <div className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div>
-                                    <label htmlFor="productName" className="block text-base font-medium text-gray-700 mb-2">
+                                    <label htmlFor="barcode" className="block text-base font-medium text-gray-700 mb-2">
                                         Codigo de Barras
                                     </label>
                                     <input
                                         value={newProduct.codigo_barras}
                                         onChange={(e) => setNewProduct({ ...newProduct, codigo_barras: e.target.value })}
                                         type="text"
-                                        id="productName"
-                                        name="productName"
+                                        id="barcode"
+                                        name="barcode"
                                         placeholder="Ingrese el codigo de barras"
                                         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                     />
                                 </div>
 
                                 <div>
-                                    <label htmlFor="productName" className="block text-base font-medium text-gray-700 mb-2">
+                                    <label htmlFor="product_name" className="block text-base font-medium text-gray-700 mb-2">
                                         Nombre del Producto
                                     </label>
                                     <input
                                         value={newProduct.nombre}
                                         onChange={(e) => setNewProduct({ ...newProduct, nombre: e.target.value })}
                                         type="text"
-                                        id="productName"
-                                        name="productName"
+                                        id="product_name"
+                                        name="product_name"
                                         placeholder="Ingrese el nombre del producto"
                                         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                     />
@@ -265,7 +277,7 @@ export function Products() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div>
-                                    <label htmlFor="brand" className="block text-base font-medium text-gray-700 mb-2">
+                                    <label htmlFor="tipo" className="block text-base font-medium text-gray-700 mb-2">
                                         Tipo de Producto
                                     </label>
                                     <div className="relative">
@@ -289,13 +301,13 @@ export function Products() {
                                 </div>
 
                                 <div>
-                                    <label htmlFor="color" className="block text-base   font-medium text-gray-700 mb-2">
+                                    <label htmlFor="estado" className="block text-base   font-medium text-gray-700 mb-2">
                                         Estado
                                     </label>
                                     <div className="relative">
                                         <select
-                                            id="color"
-                                            name="color"
+                                            id="estado"
+                                            name="estado"
                                             value={newProduct.estado}
                                             onChange={(e) => setNewProduct({ ...newProduct, estado: e.target.value })}
                                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none bg-white"
@@ -333,7 +345,7 @@ export function Products() {
 
                                 {/* Image Upload */}
                                 <div className="flex flex-col">
-                                    <label className="block text-base font-medium text-gray-700 mb-2">
+                                    <label htmlFor="fileInput" className="block text-base font-medium text-gray-700 mb-2">
                                         Imagen del Producto
                                     </label>
                                     <div
@@ -492,12 +504,16 @@ export function Products() {
                                         <select
                                             id="supplier"
                                             name="supplier"
+                                            value={newProduct.id_proveedor}
+                                            onChange={(e) => setNewProduct({ ...newProduct, id_proveedor: e.target.value })}
                                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none bg-white"
                                         >
                                             <option value="">Seleccione un proveedor</option>
-                                            {/* TODO: Cargar proveedores dinámicamente de la base de datos */}
-                                            <option value="1">Proveedor Principal A (ID: 1)</option>
-                                            <option value="2">Proveedor Principal B (ID: 2)</option>
+                                            {providers.map((provider, key) => ( // map funciona para recorrer un array
+                                                <option key={key} value={provider.id}>
+                                                    {provider.nombre}
+                                                </option>
+                                            ))}
                                         </select>
                                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
                                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -552,8 +568,11 @@ export function Products() {
                                             className="flex-1 px-4 py-2.5 border border-gray-300 rounded-l-lg border-r-0 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                         />
                                         <select
+                                            id="costCurrency"
+                                            name="costCurrency"
                                             value={newProduct.id_costo_moneda}
                                             onChange={(e) => setNewProduct({ ...newProduct, id_costo_moneda: e.target.value })}
+                                            aria-label="Moneda de Costo"
                                             className="px-3 py-2.5 border border-gray-300 bg-gray-50 text-gray-600 font-medium rounded-r-lg hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer"
                                         >
                                             <option value="2">Bs</option>
@@ -578,8 +597,11 @@ export function Products() {
                                             className="flex-1 px-4 py-2.5 border border-gray-300 rounded-l-lg border-r-0 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                         />
                                         <select
+                                            id="priceCurrency"
+                                            name="priceCurrency"
                                             value={newProduct.id_precio_moneda}
                                             onChange={(e) => setNewProduct({ ...newProduct, id_precio_moneda: e.target.value })}
+                                            aria-label="Moneda de Venta"
                                             className="px-3 py-2.5 border border-gray-300 bg-gray-50 text-gray-600 font-medium rounded-r-lg hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer"
                                         >
                                             <option value="2">Bs</option>
@@ -616,7 +638,7 @@ export function Products() {
 
                                 {/* Stock Actual */}
                                 <div>
-                                    <label className="block text-base font-medium text-gray-700 mb-2">
+                                    <label htmlFor="stock" className="block text-base font-medium text-gray-700 mb-2">
                                         Stock Actual
                                     </label>
                                     <div className="flex items-center border border-gray-300 rounded-lg w-full">
@@ -631,6 +653,7 @@ export function Products() {
                                         </button>
                                         <input
                                             type="number"
+                                            id="stock"
                                             value={newProduct.stock}
                                             onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
                                             className="w-full text-center border-none py-2.5 focus:ring-0 outline-none appearance-none"
@@ -649,7 +672,7 @@ export function Products() {
 
                                 {/* Stock Minimo */}
                                 <div>
-                                    <label className="block text-base font-medium text-gray-700 mb-2">
+                                    <label htmlFor="minStock" className="block text-base font-medium text-gray-700 mb-2">
                                         Stock Mínimo
                                     </label>
                                     <div className="flex items-center border border-gray-300 rounded-lg w-full">
@@ -664,6 +687,7 @@ export function Products() {
                                         </button>
                                         <input
                                             type="number"
+                                            id="minStock"
                                             value={newProduct.stock_minimo}
                                             onChange={e => setNewProduct({ ...newProduct, stock_minimo: e.target.value })}
                                             className="w-full text-center border-none py-2.5 focus:ring-0 outline-none appearance-none"

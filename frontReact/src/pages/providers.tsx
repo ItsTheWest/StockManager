@@ -111,7 +111,7 @@ export function Providers() {
                                     Filtrar
                                 </button>
                             </div>
-                            <Link to="/addprovider"> {/* Assuming /addprovider exists or will exist, otherwise just a button */}
+                            <Link to="/addproviders"> {/* Assuming /addprovider exists or will exist, otherwise just a button */}
                                 <button className="flex items-center gap-2 px-4 py-2 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow-sm transition-colors">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -144,16 +144,16 @@ export function Providers() {
                                 <tbody className="divide-y divide-gray-100">
                                     {initialProviders.map((provider, index) => (
                                         <tr key={provider.id} className="hover:bg-gray-50 transition-colors group">
-                                            <td className="p-5 text-gray-600 font-mono text-sm">
+                                            <td className="p-5 text-gray-600 font-mono text-sm text-center">
                                                 {provider.rif}
                                             </td>
-                                            <td className="p-5 text-gray-900 font-medium">
+                                            <td className="p-5 text-gray-900 font-medium text-center">
                                                 {provider.nombre}
                                             </td>
-                                            <td className="p-5 text-gray-600">
+                                            <td className="p-5 text-gray-600 text-center">
                                                 {provider.telefono}
                                             </td>
-                                            <td className="p-5 text-gray-600">
+                                            <td className="p-5 text-gray-600 text-center">
                                                 {provider.ubicacion}
                                             </td>
                                             <td className={`p-5 text-right relative ${openActionMenuId === provider.id ? "z-20" : "z-0"}`}>

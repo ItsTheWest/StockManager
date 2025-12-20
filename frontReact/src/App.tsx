@@ -6,6 +6,7 @@ import { Products } from './pages/products';
 import { Inventory } from './pages/inventory';
 import { Categorias } from './pages/categories';
 import { Providers } from './pages/providers';
+import { AddProviders } from './pages/addproviders';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/inventory" element={<Inventory />} />
         <Route path="/categories" element={<Categorias />} />
         <Route path="/providers" element={<Providers />} />
+        <Route path="/addproviders" element={<AddProviders />} />
       </Routes>
     </BrowserRouter>
   )
