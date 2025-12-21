@@ -8,7 +8,6 @@ export function Products() {
         nombre: "",
         descripcion: "",
         tipo_producto: "",
-        estado: "",
         id_categoria: "",
         marca: "",
         ubicacion: "",
@@ -94,7 +93,6 @@ export function Products() {
                     nombre: "",
                     descripcion: "",
                     tipo_producto: "",
-                    estado: "",
                     id_categoria: "",
                     marca: "",
                     ubicacion: "",
@@ -301,28 +299,7 @@ export function Products() {
                                 </div>
 
                                 <div>
-                                    <label htmlFor="estado" className="block text-base   font-medium text-gray-700 mb-2">
-                                        Estado
-                                    </label>
-                                    <div className="relative">
-                                        <select
-                                            id="estado"
-                                            name="estado"
-                                            value={newProduct.estado}
-                                            onChange={(e) => setNewProduct({ ...newProduct, estado: e.target.value })}
-                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none bg-white"
-                                        >
-                                            <option >Seleccione</option>
-                                            <option value="activo">Activo</option>
-                                            <option value="inactivo">Inactivo</option>
-                                            <option value="descontinuado">Descontinuado</option>
-                                        </select>
-                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-                                            </svg>
-                                        </div>
-                                    </div>
+
                                 </div>
                             </div>
                             {/* Row 5: Description and Image Upload */}
