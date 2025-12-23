@@ -18,11 +18,11 @@ export function AddProviders() {
             const { error } = await supabase.from('Proveedores').insert(newProvider).single();
             // Inserta el nuevo producto y espera la respuesta
             if (error) {
-                console.error('Error al agregar el producto:', error); //es posible que el async lanze una excepcion lo cual se captura en el catch para que no se rompa la apliacion
+                console.error('Error al agregar el proveedor:', error); //es posible que el async lanze una excepcion lo cual se captura en el catch para que no se rompa la apliacion
             } else {
                 setNewProvider({ rif: "", nombre: "", telefono: "", ubicacion: "", correo: "", nombre_contacto: "" });
                 e.target.reset();
-                console.log('Producto agregado exitosamente:', newProvider.nombre); //uso nweproduct ya que es el estado que se esta utilizando para guardar los datos del nuevo producto
+                console.log('Proveedor agregado exitosamente:', newProvider.nombre); //uso nweproduct ya que es el estado que se esta utilizando para guardar los datos del nuevo producto
             }
         } catch (error) { // Captura y muestra cualquier error que pueda ocurrir posiblemente un error de internet o de base de datos
             console.error('Error en la peticion:', error) // sirve para asegurar que se muestra el error en la consola
