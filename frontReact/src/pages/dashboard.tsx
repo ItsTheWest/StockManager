@@ -1,5 +1,4 @@
 import { Menu } from '../components/menu';
-import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from 'recharts';
 
 export function Dashboard() {
     // -----------------------------------------------------------------------
