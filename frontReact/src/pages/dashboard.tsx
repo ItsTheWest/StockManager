@@ -1,6 +1,22 @@
 import { Menu } from '../components/menu';
+import { useEffect, useState } from 'react';
 
 export function Dashboard() {
+    const [dolarPrice, setDolarPrice] = useState<number | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        // Llamada a tu API de Django
+        fetch('http://127.0.0.1:8000/services/dolar-bcv/') //fetch realiza la peticion http y devuelve una promesa
+        .then(response => response.json()) //then permite manejar la respuesta de manera asincrona  para que response.json() convierta la respuesta a json
+        .then(data => { // este segundo then maneja la respuesta convertida a json
+            if (data.process) { 
+            setDolarPrice(data.value);
+            }
+        })
+        .catch(error => console.error("Error cargando dolar:", error)) //catch maneja el error
+        .finally(() => setLoading(false)); //finally se ejecuta al finalizar la peticion y hace que loading sea false
+    }, []); //el array vacio indica que solo se ejecuta una vez porque no hay dependencias
     // -----------------------------------------------------------------------
     // 1. DATOS DE LA GRÁFICA
     // Datos de ventas diarias para una tienda física (en unidades vendidas)
@@ -22,6 +38,8 @@ export function Dashboard() {
     // 200 ocupará el 50% de la altura disponible.
     // -----------------------------------------------------------------------
     const maxValue = Math.max(...chartData.map(item => item.value));
+
+
 
     return (
         <Menu>
@@ -70,7 +88,13 @@ export function Dashboard() {
                                 </svg>
                             </div>
                             <div className="flex flex-col flex-grow">
-                                <span className="text-2xl font-bold text-gray-900 mb-1">55.25 Bs</span>
+                                {loading ? (
+                                    <span className="text-gray-400">Cargando...</span>
+                                ) : (
+                                    <span className="text-2xl font-bold text-gray-900 mb-1">
+                                    Bs. {dolarPrice?.toFixed(2)}
+                                    </span>
+                                )}
                                 <div className="flex items-center gap-2">
                                     <h3 className="text-gray-500 text-sm font-medium">Tasa del BCV</h3>
                                     <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Hoy</span>

@@ -15,6 +15,7 @@ Supabase es la Fuente de Datos y el Motor de Autenticación. Se encarga de la ge
 * **Persistencia y CRUD Básico:** Almacena todas las tablas de la aplicación. Permite que el Frontend (React) realice operaciones CRUD básicas (Crear, Leer, Actualizar, Eliminar) directamente a través de sus APIs (PostgREST).
 * **Autenticación y Seguridad:** Gestiona el registro, el inicio de sesión de los usuarios y la emisión de tokens. Lo más importante, aplica las Políticas RLS (*Row Level Security*) para asegurar que un usuario solo pueda manipular los datos a los que tiene permiso, incluso cuando la petición viene directamente de React.
 
+
 ### ⚛️ React (Frontend): La Interfaz de Usuario
 React funciona como el Cliente y la Interfaz de Usuario. Su enfoque está 100% en la experiencia del usuario y la interacción.
 
@@ -37,11 +38,11 @@ El backend se centra en el framework Django, la gestión de datos PostgreSQL y l
 | **asgiref, anyio, websockets** | Paquetes fundamentales para manejar la asincronía y la concurrencia. `asgiref` es la interfaz entre Django y los servidores asíncronos, y `websockets` es crucial para comunicaciones bidireccionales en tiempo real. |
 
 #### B. Integración de Servicios Cloud y Utilidades (Supabase)
-*Uso extensivo de librerías versión 2.27.0, sugiriendo fuerte dependencia del ecosistema Backend-as-a-Service.*
-
-* **supabase, postgrest, supabase-auth, realtime, storage3**: Conjunto de librerías cliente de Supabase. Permiten interactuar con la BD (`postgrest`), gestionar autenticación (`supabase-auth`), manejo de archivos (`storage3`) y actualizaciones en tiempo real (`realtime`).
-* **PyJWT**: Utilizado para la creación y validación de JSON Web Tokens, fundamentales para la seguridad y gestión de sesión en entornos API/serverless.
-* **python-dotenv**: Herramienta esencial de seguridad y configuración local. Carga variables de entorno (claves API, secretos) desde un archivo `.env`.
+| Librería / Herramienta | Versión / Descripción |
+| :--- | :--- |
+| **supabase, postgrest, supabase-auth, realtime, storage3** | Cliente de Supabase. Permiten interactuar con la BD (`postgrest`), gestionar autenticación (`supabase-auth`), manejo de archivos (`storage3`) y actualizaciones en tiempo real (`realtime`). |
+| **PyJWT** | Utilizado para la creación y validación de JSON Web Tokens, fundamentales para la seguridad y gestión de sesión en entornos API/serverless. |
+| **python-dotenv** | Herramienta esencial de seguridad y configuración local. Carga variables de entorno (claves API, secretos) desde un archivo `.env`. |
 
 #### C. Validación de Datos, Peticiones y Seguridad
 | Librería | Descripción |
@@ -52,19 +53,25 @@ El backend se centra en el framework Django, la gestión de datos PostgreSQL y l
 | **cryptography, certifi** | Proveen herramientas criptográficas básicas (`cryptography` para hashing/cifrado) y lista de certificados raíz de confianza (`certifi`) para verificación SSL/TLS. |
 
 #### D. Manipulación de Archivos y Caching
-* **pillow**: Biblioteca fundamental para el manejo de imágenes (subir, redimensionar, recortar, avatares).
-* **cachetools**: Utilizada para implementar estrategias de caching en memoria (LRU, LFU) para mejorar tiempos de respuesta en consultas costosas.
+| Librería | Descripción |
+| :--- | :--- |
+| **pillow** | Biblioteca fundamental para el manejo de imágenes (subir, redimensionar, recortar, avatares). |
+| **cachetools** | Utilizada para implementar estrategias de caching en memoria (LRU, LFU) para mejorar tiempos de respuesta en consultas costosas. |
 
 ### 🎨 Frontend (React)
-Enfocado en crear una Interfaz de Usuario (UI) interactiva, moderna y fácil de mantener.
+El frontend está enfocado en crear una Interfaz de Usuario (UI) interactiva, moderna y fácil de mantener.
 
 #### A. Framework y Routing
-* **react (19.2.0) y @types/react**: Librería principal para construir la UI mediante componentes (SPA).
-* **react-router-dom**: Biblioteca estándar para el enrutamiento, permitiendo navegación entre vistas sin recarga completa.
+| Librería | Descripción |
+| :--- | :--- |
+| **react (19.2.0) y @types/react** | La librería principal para construir la interfaz de usuario utilizando componentes (SPA). |
+| **react-router-dom** | La biblioteca estándar para el enrutamiento dentro de una aplicación React. Permite la navegación sin recargar la página completa. |
 
 #### B. Estilizado y Diseño
-* **tailwindcss (4.1.17) y @tailwindcss/vite**: Librería CSS utility-first para construir diseños aplicando clases en el HTML/JSX.
-* **postcss y autoprefixer**: Herramientas de procesamiento CSS. `postcss` transforma estilos con JS y `autoprefixer` asegura compatibilidad con navegadores añadiendo prefijos.
+| Librería | Descripción |
+| :--- | :--- |
+| **tailwindcss (4.1.17) y @tailwindcss/vite** | La librería de CSS *utility-first* que permite construir diseños aplicando clases directamente en el HTML/JSX. |
+| **postcss y autoprefixer** | Herramientas de procesamiento de CSS. `postcss` transforma estilos con JavaScript, y `autoprefixer` asegura que el CSS sea compatible con una amplia gama de navegadores. |
 
 ---
 
@@ -100,3 +107,28 @@ Enfocado en crear una Interfaz de Usuario (UI) interactiva, moderna y fácil de 
  │   └── 📄 vite.config.ts        #    ⚡ Configuración del compilador Vite
  │
  └── 📂 venv/                     # 🐍 Entorno Virtual (Librerías de Python aisladas)
+```
+### Descripción de Archivos Clave
+
+#### En el Backend (`backDjango`)
+| Archivo | Función Principal |
+| :--- | :--- |
+| **manage.py** | Herramienta de línea de comandos fundamental para la administración del proyecto (servidor de desarrollo, migraciones, etc.). |
+| **backDjango/settings.py** | Centro de control de la aplicación, definiendo conexión a BD, claves de seguridad y reglas de permisos (CORS). |
+| **backDjango/urls.py** | Despachador de tráfico, mapeando las direcciones URL hacia la lógica del servidor. |
+| **backDjango/asgi.py** | Punto de entrada para servidores ASGI, esencial para manejar protocolos asíncronos como WebSockets y el tiempo real. |
+
+#### En el Frontend (`frontReact`)
+| Archivo | Función Principal |
+| :--- | :--- |
+| **src/App.tsx** | Representa el componente raíz visual y contenedor principal donde se estructura el enrutamiento. |
+| **src/supabase-client.ts** | Establece e inicializa la conexión directa entre la interfaz y los servicios de Supabase. |
+| **src/pages/ vs src/components/** | `components` almacena piezas reutilizables y `pages` contiene las vistas completas. |
+| **tailwind.config.js** | Centraliza la personalización visual (paleta de colores, tipografías) para Tailwind CSS. |
+| **vite.config.ts** | Controla el entorno de desarrollo y construcción del frontend, definiendo parámetros técnicos. |
+
+#### Archivos de Configuración General
+| Archivo | Función Principal |
+| :--- | :--- |
+| **package.json** | Funciona como el manifiesto o inventario del frontend, listando librerías externas y definiendo los scripts. |
+| **.env** | Archivo crítico de seguridad para almacenar variables sensibles (claves API, direcciones de BD), manteniéndolas fuera del código fuente. |
