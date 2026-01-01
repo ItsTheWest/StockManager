@@ -2,78 +2,43 @@
 import { Menu } from "../components/menu";
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-
+import { supabase } from "../supabase-client";
+import { Message } from "../components/Message";
+import { DeleteModal } from "../components/DeleteModal";
 // Mock data to match the image
-const initialProducts = [
-    {
-        id: 1,
-        name: "Canon EOS R5 Camera",
-        category: "Cámara",
-        brand: "Canon",
-        price: "$3,899",
-        stock: "En Stock",
-        stockStatus: "in-stock",
-        createdAt: "28 Sep, 2027",
-        image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-1.2.1&auto=format&fit=crop&w=128&q=80"
-    },
-    {
-        id: 2,
-        name: "Sony WH-1000XM5 Headphones",
-        category: "Audio",
-        brand: "Sony",
-        price: "$399",
-        stock: "En Stock",
-        stockStatus: "in-stock",
-        createdAt: "28 Sep, 2027",
-        image: "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?ixlib=rb-1.2.1&auto=format&fit=crop&w=128&q=80"
-    },
-    {
-        id: 3,
-        name: "Bose QuietComfort Earbuds",
-        category: "Audio",
-        brand: "Bose",
-        price: "$279",
-        stock: "En Stock",
-        stockStatus: "in-stock",
-        createdAt: "18 Nov, 2027",
-        image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?ixlib=rb-1.2.1&auto=format&fit=crop&w=128&q=80"
-    },
-    {
-        id: 4,
-        name: "Airpods Pro 2nd Gen",
-        category: "Accesorios",
-        brand: "Apple",
-        price: "$839",
-        stock: "En Stock",
-        stockStatus: "in-stock",
-        createdAt: "29 Jun, 2027",
-        image: "https://images.unsplash.com/photo-1606841837239-c5a1a4a07afe?ixlib=rb-1.2.1&auto=format&fit=crop&w=128&q=80"
-    },
-    {
-        id: 5,
-        name: "Razer DeathAdder V3 Mouse",
-        category: "Accesorios",
-        brand: "Razer",
-        price: "$89",
-        stock: "En Stock",
-        stockStatus: "in-stock",
-        createdAt: "23 Oct, 2027",
-        image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?ixlib=rb-1.2.1&auto=format&fit=crop&w=128&q=80"
-    },
-    {
-        id: 6,
-        name: "Logitech MX Master 3S",
-        category: "Accesorios",
-        brand: "Logitech",
-        price: "$119",
-        stock: "En Stock",
-        stockStatus: "in-stock",
-        createdAt: "14 Dec, 2027",
-        image: "https://images.unsplash.com/photo-1615663245857-acda6b025e6e?ixlib=rb-1.2.1&auto=format&fit=crop&w=128&q=80"
-    }
-];
+
+
 
 export function Inventory() {
+    const [products, setProducts] = useState<any[]>([]);
+    
+    // Función para obtener productos desde Supabase
+    const getProducts = async () => {
+        try {
+            const { error, data } = await supabase
+                .from('Productos')
+                // Seleccionamos todos los campos de productos y el nombre de la categoria relacionada
+                // Asumiendo que la relación se llama 'Categorias' (mayúscula inicial como la tabla)
+                .select('*, Categorias(nombre)')
+                .eq('estado', true) // Solo mostrar productos activos
+                .order('nombre', { ascending: true });
+                
+            if (error) {
+                console.error('Error al obtener los productos:', error);
+                return;
+            }
+            if (data) {
+                setProducts(data);
+            }
+        } catch (err) {
+            console.error('Error inesperado:', err);
+        }
+    };
+
+    useEffect(() => {
+        getProducts();
+    }, []);
+
     const [openActionMenuId, setOpenActionMenuId] = useState<number | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -97,6 +62,56 @@ export function Inventory() {
         } else {
             setOpenActionMenuId(id);
         }
+    };
+
+    // --- Lógica de Componentes (Modal y Mensajes) ---
+    // isDeleteModalOpen: controla si el modal de confirmación es visible
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    // productToDelete: guarda temporalmente el ID del producto que el usuario quiere borrar
+    const [productToDelete, setProductToDelete] = useState<number | null>(null);
+    // toastConfig: configuración para el mensaje de éxito (si se muestra y qué dice)
+    const [toastConfig, setToastConfig] = useState({ show: false, message: '' });
+
+    // Se ejecuta cuando el usuario hace clic en el botón "Eliminar" de la tabla
+    const handleDeleteClick = (id: number, e: React.MouseEvent) => {
+        e.stopPropagation(); 
+        setProductToDelete(id);      // Guardamos el ID para saber qué borrar después
+        setIsDeleteModalOpen(true);  // Abrimos el modal de confirmación
+        setOpenActionMenuId(null);   // Cerramos el menú de acciones (los 3 puntitos)
+    };
+
+    // Se ejecuta solo si el usuario confirma la eliminación dentro del modal
+    const confirmDelete = async () => {
+        if (!productToDelete) return;
+
+        try {
+            // Soft delete en la base de datos (cambiamos estado a false en lugar de borrar la fila)
+            const { error } = await supabase
+                .from('Productos')
+                .update({ estado: false })
+                .eq('id', productToDelete);
+
+            if (error) {
+                console.error('Error al eliminar:', error);
+            } else {
+                // Actualizamos la lista local para que el producto desaparezca de la tabla
+                setProducts(products.filter(p => p.id !== productToDelete));
+                // Activamos el mensaje de éxito (Toast)
+                setToastConfig({ show: true, message: 'Producto eliminado correctamente' });
+            }
+        } catch (err) {
+            console.error('Error:', err);
+        } finally {
+            // Cerramos el modal y limpiamos el ID pase lo que pase
+            setIsDeleteModalOpen(false);
+            setProductToDelete(null);
+        }
+    };
+
+    // Se ejecuta si el usuario cancela la acción en el modal
+    const cancelDelete = () => {
+        setIsDeleteModalOpen(false); // Simplemente cerramos el modal
+        setProductToDelete(null);    // Limpiamos el ID temporal
     };
 
     return (
@@ -168,25 +183,40 @@ export function Inventory() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    {initialProducts.map((product, index) => (
+                                    {products.map((product, index) => (
                                         <tr key={product.id} className="hover:bg-gray-50 transition-colors group">
                                             <td className="p-5">
-                                                <div className="flex items-center gap-4">
+                                                <div className="flex items-center justify-center gap-4">
                                                     <div className="h-10 w-10 flex-shrink-0">
-                                                        <img className="h-10 w-10 rounded-lg object-cover border border-gray-200" src={product.image} alt="" />
+                                                        <img 
+                                                            className="h-10 w-10 rounded-lg object-cover border border-gray-200" 
+                                                            src={product.imagen || "https://via.placeholder.com/150"} 
+                                                            alt={product.nombre} 
+                                                        />
                                                     </div>
-                                                    <div className="font-medium text-gray-900">{product.name}</div>
+                                                    <div className="font-medium text-gray-900">{product.nombre}</div>
                                                 </div>
                                             </td>
-                                            <td className="p-5 text-gray-600">{product.category}</td>
-                                            <td className="p-5 text-gray-600">{product.brand}</td>
-                                            <td className="p-5 font-medium text-gray-900">{product.price}</td>
-                                            <td className="p-5">
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                                    {product.stock}
+                                            {/* Accedemos al nombre de la categoría a través de la relación */}
+                                            <td className="p-5 text-gray-600 text-center">
+                                                {product.Categorias?.nombre || "Sin Categoría"}
+                                            </td>
+                                            <td className="p-5 text-gray-600 text-center">{product.marca}</td>
+                                            <td className="p-5 font-medium text-gray-900 text-center">
+                                                ${product.precio_monto}
+                                            </td>
+                                            <td className="p-5 text-center">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                    Number(product.stock) > Number(product.stock_minimo) 
+                                                    ? "bg-green-100 text-green-700" 
+                                                    : "bg-red-100 text-red-700"
+                                                }`}>
+                                                    {Number(product.stock) > Number(product.stock_minimo) ? "En Stock" : "Agotado"} ({product.stock})
                                                 </span>
                                             </td>
-                                            <td className="p-5 text-gray-600">{product.createdAt}</td>
+                                            <td className="p-5 text-gray-600 text-center">
+                                                {new Date(product.fecha_creacion).toLocaleDateString()}
+                                            </td>
                                             <td className={`p-5 text-right relative ${openActionMenuId === product.id ? "z-20" : "z-0"}`}>
                                                 <button
                                                     onClick={(e) => toggleActionMenu(product.id, e)}
@@ -203,7 +233,7 @@ export function Inventory() {
                                                 {openActionMenuId === product.id && (
                                                     <div
                                                         ref={menuRef}
-                                                        className={`absolute right-8 w-40 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-1 animation-fade-in ${index >= initialProducts.length - 2 ? "bottom-8 origin-bottom-right" : "top-8 origin-top-right"
+                                                        className={`absolute right-8 w-40 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-1 animation-fade-in ${index >= products.length - 2 ? "bottom-8 origin-bottom-right" : "top-8 origin-top-right"
                                                             }`}
                                                         style={{ animation: "fadeIn 0.2s ease-out" }}
                                                     >
@@ -228,7 +258,7 @@ export function Inventory() {
                                                         </button>
                                                         <button
                                                             className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
-                                                            onClick={(e) => { e.stopPropagation(); setOpenActionMenuId(null); }}
+                                                            onClick={(e) => handleDeleteClick(product.id, e)}
                                                         >
                                                             <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -237,6 +267,7 @@ export function Inventory() {
                                                         </button>
                                                     </div>
                                                 )}
+
                                             </td>
                                         </tr>
                                     ))}
@@ -274,6 +305,19 @@ export function Inventory() {
                     </div>
                 </main>
             </div>
+            {/* Modal de confirmación: siempre está presente pero solo se "dibuja" si isOpen es true */}
+            <DeleteModal
+                isOpen={isDeleteModalOpen}
+                onClose={cancelDelete}
+                onConfirm={confirmDelete}
+            />
+
+            {/* Mensaje de notificación (Toast): aparece arriba a la derecha al eliminar un producto */}
+            <Message
+                message={toastConfig.message}
+                isVisible={toastConfig.show}
+                onClose={() => setToastConfig({ ...toastConfig, show: false })}
+            />
         </Menu>
     );
 }

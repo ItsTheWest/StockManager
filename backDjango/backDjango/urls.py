@@ -16,9 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from services.views import getBcv
+from services.views import getBcv, api_root
 
 urlpatterns = [
+    path('', api_root, name='api_root'),  # URL raíz - muestra endpoints disponibles
     path('admin/', admin.site.urls),
     path('services/dolar-bcv/', getBcv, name='getBcv'),  # URL para obtener el dólar del BCV
 ] 

@@ -21,8 +21,133 @@ export function Products() {
         id_proveedor: "",
     });
 
+    // Estado para manejar los errores de validación de TODOS los campos
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+    // ============================================
+    // REGLAS DE VALIDACIÓN CENTRALIZADAS
+    // ============================================
+    // Aquí defines las reglas para cada campo que quieras validar
+    const validationRules: { [key: string]: (value: string) => string } = {
+        nombre: (value) => {
+            if (!value.trim()) return "El nombre es obligatorio";
+            if (/\d/.test(value)) return "El nombre no puede contener números";
+            if (value.length > 50) return "El nombre no puede exceder 50 caracteres";
+            return "";
+        },
+        codigo_barras: (value) => {
+            if (!value.trim()) return "El código de barras es obligatorio";
+            if (value.length < 8) return "El código debe tener al menos 8 caracteres";
+            if (value.length > 20) return "El código no puede exceder 20 caracteres";
+            return "";
+        },
+        marca: (value) => {
+            if (value && /\d/.test(value)) return "La marca no puede contener números";
+            if (value.length > 30) return "La marca no puede exceder 30 caracteres";
+            return "";
+        },
+        ubicacion: (value) => {
+            if (value.length > 50) return "La ubicación no puede exceder 50 caracteres";
+            return "";
+        },
+        costo_monto: (value) => {
+            if (!value.trim()) return "El costo es obligatorio";
+            if (parseFloat(value) <= 0) return "El costo debe ser mayor a 0";
+            return "";
+        },
+        precio_monto: (value) => {
+            if (!value.trim()) return "El precio es obligatorio";
+            if (parseFloat(value) <= 0) return "El precio debe ser mayor a 0";
+            return "";
+        },
+        stock: (value) => {
+            if (!String(value).trim()) return "El stock es obligatorio";
+            if (Number(value) < 0) return "El stock no puede ser negativo";
+            if (Number(value) < Number(newProduct.stock_minimo)) return "El stock no puede ser menor al stock mínimo";
+            return "";
+        },
+        stock_minimo: (value) => {
+            if (!String(value).trim()) return "El stock mínimo es obligatorio";
+            if (Number(value) < 0) return "El stock mínimo no puede ser negativo";
+            return "";
+        },
+        descripcion: (value) => {
+            if (value.length > 500) return "La descripción no puede exceder 500 caracteres";
+            return "";
+        },
+        tipo_producto: (value) => {
+            if (!value) return "Debe seleccionar un tipo de producto";
+            return "";
+        },
+        id_categoria: (value) => {
+            if (!value) return "Debe seleccionar una categoría";
+            return "";
+        },
+        id_proveedor: (value) => {
+            if (!value) return "Debe seleccionar un proveedor";
+            return "";
+        },
+        margen_ganancia: (value) => {
+            if (value && (Number(value) <= 0 || Number(value) > 100)) return "El margen debe ser mayor a 0 y máx 100";
+            return "";
+        }
+    };
+
+    // ============================================
+    // FUNCIÓN GENÉRICA DE VALIDACIÓN
+    // ============================================
+    // Esta función valida cualquier campo usando las reglas definidas arriba
+    const validateField = (fieldName: string, value: string): string => {
+        // Si existe una regla para este campo, la ejecuta
+        if (validationRules[fieldName]) {
+            return validationRules[fieldName](value);
+        }
+        // Si no hay regla, no hay error
+        return "";
+    };
+
+    // ============================================
+    // HANDLER UNIVERSAL PARA INPUTS
+    // ============================================
+    // Esta función maneja CUALQUIER input del formulario
+    const handleInputChange = (fieldName: string, value: string) => {
+        // Solo actualiza el valor, NO valida en tiempo real
+        setNewProduct({ ...newProduct, [fieldName]: value });
+        
+        // Si había un error previo para este campo, lo limpia
+        if (errors[fieldName]) {
+            setErrors({ ...errors, [fieldName]: "" });
+        }
+    };
+
     const handleSubmit = async (e: any) => {
         e.preventDefault(); // Previene el recargo de la página al enviar el formulario
+
+        // ============================================
+        // VALIDAR TODOS LOS CAMPOS ANTES DE ENVIAR
+        // ============================================
+        const newErrors: { [key: string]: string } = {};
+        
+        // Recorre todos los campos del producto y los valida
+        Object.keys(newProduct).forEach((fieldName) => {
+            const value = newProduct[fieldName as keyof typeof newProduct];
+            const error = validateField(fieldName, String(value));
+            if (error) {
+                newErrors[fieldName] = error;
+            }
+        });
+        
+        // Validar imagen
+        if (!imageFile) {
+            newErrors['imagen'] = "La imagen del producto es obligatoria";
+        }
+
+        // Si hay errores, actualiza el estado y detiene el envío
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            alert("Por favor corrige los errores en el formulario antes de enviar");
+            return; // Detiene el envío del formulario
+        }
 
         try {
             let imageUrl = null;
@@ -107,8 +232,7 @@ export function Products() {
                 });
                 setImagePreview(null);
                 setImageFile(null); // Limpiamos el archivo seleccionado
-                setCurrentStock(0);
-                setMinStock(0);
+                
 
                 // Reseteamos el formulario HTML
                 e.target.reset(); // Esto limpia los inputs que no están controlados por React si los hubiera
@@ -154,9 +278,7 @@ export function Products() {
     // Estado para almacenar el archivo de imagen real que se subirá a Supabase Storage
     const [imageFile, setImageFile] = useState<File | null>(null);
 
-    const [currentStock, setCurrentStock] = useState<number>(0);
-    const [minStock, setMinStock] = useState<number>(0);
-
+   
 
     // Funcion que se ejecuta cuando el usuario selecciona un archivo mediante el input
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -174,7 +296,13 @@ export function Products() {
                 setImagePreview(reader.result as string);
             };
             // Iniciamos la lectura del archivo como una URL de datos (base64)
+            // Iniciamos la lectura del archivo como una URL de datos (base64)
             reader.readAsDataURL(file);
+
+            // Limpiamos el error de imagen si existe
+            if (errors.imagen) {
+                setErrors({ ...errors, imagen: "" });
+            }
         }
     };
 
@@ -206,6 +334,11 @@ export function Products() {
                 setImagePreview(reader.result as string);
             };
             reader.readAsDataURL(file);
+
+            // Limpiamos el error de imagen si existe
+            if (errors.imagen) {
+                setErrors({ ...errors, imagen: "" });
+            }
         }
     };
 
@@ -248,13 +381,22 @@ export function Products() {
                                     </label>
                                     <input
                                         value={newProduct.codigo_barras}
-                                        onChange={(e) => setNewProduct({ ...newProduct, codigo_barras: e.target.value })}
+                                        onChange={(e) => handleInputChange('codigo_barras', e.target.value)}
                                         type="text"
                                         id="barcode"
                                         name="barcode"
-                                        placeholder="Ingrese el codigo de barras"
-                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                        placeholder={errors.codigo_barras || "Ingrese el codigo de barras"}
+                                        className={`w-full px-4 py-2.5 border rounded-lg outline-none transition-all ${
+                                            errors.codigo_barras 
+                                                ? 'border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 placeholder-red-500' 
+                                                : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                        }`}
                                     />
+                                    {errors.codigo_barras && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.codigo_barras}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
@@ -263,13 +405,22 @@ export function Products() {
                                     </label>
                                     <input
                                         value={newProduct.nombre}
-                                        onChange={(e) => setNewProduct({ ...newProduct, nombre: e.target.value })}
+                                        onChange={(e) => handleInputChange('nombre', e.target.value)}
                                         type="text"
                                         id="product_name"
                                         name="product_name"
-                                        placeholder="Ingrese el nombre del producto"
-                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                        placeholder={errors.nombre || "Ingrese el nombre del producto"}
+                                        className={`w-full px-4 py-2.5 border rounded-lg outline-none transition-all ${
+                                            errors.nombre 
+                                                ? 'border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 placeholder-red-500' 
+                                                : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                        }`}
                                     />
+                                    {errors.nombre && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.nombre}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
@@ -283,8 +434,12 @@ export function Products() {
                                             id="tipo"
                                             name="tipo"
                                             value={newProduct.tipo_producto}
-                                            onChange={(e) => setNewProduct({ ...newProduct, tipo_producto: e.target.value })}
-                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none bg-white"
+                                            onChange={(e) => handleInputChange('tipo_producto', e.target.value)}
+                                            className={`w-full px-4 py-2.5 border rounded-lg outline-none transition-all appearance-none bg-white ${
+                                                errors.tipo_producto 
+                                                    ? 'border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500' 
+                                                    : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                            }`}
                                         >
                                             <option value="">Seleccione</option>
                                             <option value="simple">Simple</option>
@@ -296,6 +451,11 @@ export function Products() {
                                             </svg>
                                         </div>
                                     </div>
+                                    {errors.tipo_producto && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.tipo_producto}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
@@ -313,11 +473,20 @@ export function Products() {
                                         id="description"
                                         name="description"
                                         value={newProduct.descripcion}
-                                        onChange={(e) => setNewProduct({ ...newProduct, descripcion: e.target.value })}
-                                        placeholder="Ingrese la descripción del producto (opcional)"
+                                        onChange={(e) => handleInputChange('descripcion', e.target.value)}
+                                        placeholder={errors.descripcion || "Ingrese la descripción del producto (opcional)"}
                                         rows={6}
-                                        className="w-full flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
+                                        className={`w-full flex-1 px-4 py-2.5 border rounded-lg outline-none transition-all resize-none ${
+                                            errors.descripcion 
+                                                ? 'border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 placeholder-red-500' 
+                                                : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                        }`}
                                     />
+                                    {errors.descripcion && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.descripcion}
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Image Upload */}
@@ -326,7 +495,9 @@ export function Products() {
                                         Imagen del Producto
                                     </label>
                                     <div
-                                        className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors cursor-pointer w-full h-64 flex flex-col items-center justify-center relative"
+                                        className={`border-2 border-dashed rounded-lg p-8 text-center hover:border-blue-400 transition-colors cursor-pointer w-full h-64 flex flex-col items-center justify-center relative ${
+                                            errors.imagen ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                        }`}
                                         // Eventos de arrastrar y soltar asignados al contenedor
                                         onDragOver={handleDragOver}
                                         onDrop={handleDrop}
@@ -411,6 +582,11 @@ export function Products() {
                                             onChange={handleImageChange}
                                         />
                                     </div>
+                                    {errors.imagen && (
+                                        <p className="mt-1 text-sm text-red-600 text-center">
+                                            {errors.imagen}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -431,28 +607,48 @@ export function Products() {
                                     <label htmlFor="category" className="block text-base font-medium text-gray-700 mb-2">
                                         Categoría
                                     </label>
-                                    <div className="relative">
-
-                                        <select
-                                            id="category"
-                                            name="category"
-                                            value={newProduct.id_categoria}
-                                            onChange={(e) => setNewProduct({ ...newProduct, id_categoria: e.target.value })}
-                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none bg-white"
-                                        >
-                                            <option value="">Seleccione una categoría</option>
-                                            {categories.map((category, key) => ( // map funciona para recorrer un array
-                                                <option key={key} value={category.id}>
-                                                    {category.nombre}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-                                            </svg>
+                                        <div className="flex gap-2">
+                                            <div className="relative flex-1">
+                                                <select
+                                                    id="category"
+                                                    name="category"
+                                                    value={newProduct.id_categoria}
+                                                    onChange={(e) => handleInputChange('id_categoria', e.target.value)}
+                                                    className={`w-full px-4 py-2.5 border rounded-lg outline-none transition-all appearance-none bg-white ${
+                                                        errors.id_categoria
+                                                            ? 'border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500' 
+                                                            : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                                    }`}
+                                                >
+                                                    <option value="">Seleccione una categoría</option>
+                                                    {categories.map((category, key) => (
+                                                        <option key={key} value={category.id}>
+                                                            {category.nombre}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="px-3 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center shadow-sm"
+                                                onClick={() => console.log('Añadir nueva categoría')}
+                                                title="Añadir nueva categoría"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                                                </svg>
+                                            </button>
                                         </div>
-                                    </div>
+                                    {errors.id_categoria && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.id_categoria}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
@@ -464,10 +660,19 @@ export function Products() {
                                         id="brandName"
                                         name="brandName"
                                         value={newProduct.marca}
-                                        onChange={(e) => setNewProduct({ ...newProduct, marca: e.target.value })}
-                                        placeholder="Ingrese la marca (opcional)"
-                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                        onChange={(e) => handleInputChange('marca', e.target.value)}
+                                        placeholder={errors.marca || "Ingrese la marca (opcional)"}
+                                        className={`w-full px-4 py-2.5 border rounded-lg outline-none transition-all ${
+                                            errors.marca
+                                                ? 'border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 placeholder-red-500' 
+                                                : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                        }`}
                                     />
+                                    {errors.marca && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.marca}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
@@ -482,8 +687,12 @@ export function Products() {
                                             id="supplier"
                                             name="supplier"
                                             value={newProduct.id_proveedor}
-                                            onChange={(e) => setNewProduct({ ...newProduct, id_proveedor: e.target.value })}
-                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none bg-white"
+                                            onChange={(e) => handleInputChange('id_proveedor', e.target.value)}
+                                            className={`w-full px-4 py-2.5 border rounded-lg outline-none transition-all appearance-none bg-white ${
+                                                errors.id_proveedor
+                                                    ? 'border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500' 
+                                                    : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                            }`}
                                         >
                                             <option value="">Seleccione un proveedor</option>
                                             {providers.map((provider, key) => ( // map funciona para recorrer un array
@@ -498,6 +707,11 @@ export function Products() {
                                             </svg>
                                         </div>
                                     </div>
+                                    {errors.id_proveedor && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.id_proveedor}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
@@ -509,10 +723,19 @@ export function Products() {
                                         id="location"
                                         name="location"
                                         value={newProduct.ubicacion}
-                                        onChange={(e) => setNewProduct({ ...newProduct, ubicacion: e.target.value })}
-                                        placeholder="Ingrese la ubicación (Ej: Pasillo 3, Estante B)"
-                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                        onChange={(e) => handleInputChange('ubicacion', e.target.value)}
+                                        placeholder={errors.ubicacion || "Ingrese la ubicación (Ej: Pasillo 3, Estante B)"}
+                                        className={`w-full px-4 py-2.5 border rounded-lg outline-none transition-all ${
+                                            errors.ubicacion
+                                                ? 'border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 placeholder-red-500' 
+                                                : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                        }`}
                                     />
+                                    {errors.ubicacion && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.ubicacion}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -540,9 +763,13 @@ export function Products() {
                                             id="acquisitionCost"
                                             name="acquisitionCost"
                                             value={newProduct.costo_monto}
-                                            onChange={(e) => setNewProduct({ ...newProduct, costo_monto: e.target.value })}
-                                            placeholder="0.00 "
-                                            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-l-lg border-r-0 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                            onChange={(e) => handleInputChange('costo_monto', e.target.value)}
+                                            placeholder={errors.costo_monto || "0.00"}
+                                            className={`flex-1 px-4 py-2.5 border rounded-l-lg border-r-0 outline-none transition-all ${
+                                                errors.costo_monto
+                                                    ? 'border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 placeholder-red-500' 
+                                                    : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                            }`}
                                         />
                                         <select
                                             id="costCurrency"
@@ -569,9 +796,13 @@ export function Products() {
                                             id="salePrice"
                                             name="salePrice"
                                             value={newProduct.precio_monto}
-                                            onChange={(e) => setNewProduct({ ...newProduct, precio_monto: e.target.value })}
-                                            placeholder="0.00"
-                                            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-l-lg border-r-0 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                            onChange={(e) => handleInputChange('precio_monto', e.target.value)}
+                                            placeholder={errors.precio_monto || "0.00"}
+                                            className={`flex-1 px-4 py-2.5 border rounded-l-lg border-r-0 outline-none transition-all ${
+                                            errors.precio_monto
+                                                ? 'border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 placeholder-red-500' 
+                                                : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                        }`}
                                         />
                                         <select
                                             id="priceCurrency"
@@ -601,11 +832,15 @@ export function Products() {
                                             id="profitMargin"
                                             name="profitMargin"
                                             value={newProduct.margen_ganancia}
-                                            onChange={(e) => setNewProduct({ ...newProduct, margen_ganancia: e.target.value })}
+                                            onChange={(e) => handleInputChange('margen_ganancia', e.target.value)}
                                             max="100"
                                             min="0"
-                                            placeholder="(Campo opcional)"
-                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all pr-10"
+                                            placeholder={errors.margen_ganancia || "(Campo opcional)"}
+                                            className={`w-full px-4 py-2.5 border rounded-lg outline-none transition-all pr-10 ${
+                                                errors.margen_ganancia
+                                                    ? 'border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 placeholder-red-500' 
+                                                    : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                            }`}
                                         />
                                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
                                             <span>%</span>
@@ -618,10 +853,12 @@ export function Products() {
                                     <label htmlFor="stock" className="block text-base font-medium text-gray-700 mb-2">
                                         Stock Actual
                                     </label>
-                                    <div className="flex items-center border border-gray-300 rounded-lg w-full">
+                                    <div className={`flex items-center border rounded-lg w-full ${
+                                        errors.stock ? 'border-red-500' : 'border-gray-300'
+                                    }`}>
                                         <button
                                             type="button"
-                                            onClick={() => setCurrentStock(Math.max(0, currentStock - 1))}
+                                            onClick={() => handleInputChange('stock', String(Math.max(0, (Number(newProduct.stock) || 0) - 1)))}
                                             className="px-4 py-2.5 text-gray-600 hover:bg-gray-100 rounded-l-lg transition-colors border-r border-gray-300"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -632,12 +869,12 @@ export function Products() {
                                             type="number"
                                             id="stock"
                                             value={newProduct.stock}
-                                            onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
-                                            className="w-full text-center border-none py-2.5 focus:ring-0 outline-none appearance-none"
+                                            onChange={(e) => handleInputChange('stock', e.target.value)}
+                                            className="w-full text-center border-none py-2.5 focus:ring-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         />
                                         <button
                                             type="button"
-                                            onClick={() => setCurrentStock(currentStock + 1)}
+                                            onClick={() => handleInputChange('stock', String((Number(newProduct.stock) || 0) + 1))}
                                             className="px-4 py-2.5 text-gray-600 hover:bg-gray-100 rounded-r-lg transition-colors border-l border-gray-300"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -645,6 +882,11 @@ export function Products() {
                                             </svg>
                                         </button>
                                     </div>
+                                    {errors.stock && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.stock}
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Stock Minimo */}
@@ -652,10 +894,12 @@ export function Products() {
                                     <label htmlFor="minStock" className="block text-base font-medium text-gray-700 mb-2">
                                         Stock Mínimo
                                     </label>
-                                    <div className="flex items-center border border-gray-300 rounded-lg w-full">
+                                    <div className={`flex items-center border rounded-lg w-full ${
+                                        errors.stock_minimo ? 'border-red-500' : 'border-gray-300'
+                                    }`}>
                                         <button
                                             type="button"
-                                            onClick={() => setMinStock(Math.max(0, minStock - 1))}
+                                            onClick={() => handleInputChange('stock_minimo', String(Math.max(0, (Number(newProduct.stock_minimo) || 0) - 1)))}
                                             className="px-4 py-2.5 text-gray-600 hover:bg-gray-100 rounded-l-lg transition-colors border-r border-gray-300"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -666,12 +910,12 @@ export function Products() {
                                             type="number"
                                             id="minStock"
                                             value={newProduct.stock_minimo}
-                                            onChange={e => setNewProduct({ ...newProduct, stock_minimo: e.target.value })}
-                                            className="w-full text-center border-none py-2.5 focus:ring-0 outline-none appearance-none"
+                                            onChange={(e) => handleInputChange('stock_minimo', e.target.value)}
+                                            className="w-full text-center border-none py-2.5 focus:ring-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         />
                                         <button
                                             type="button"
-                                            onClick={() => setMinStock(minStock + 1)}
+                                            onClick={() => handleInputChange('stock_minimo', String((Number(newProduct.stock_minimo) || 0) + 1))}
                                             className="px-4 py-2.5 text-gray-600 hover:bg-gray-100 rounded-r-lg transition-colors border-l border-gray-300"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -679,6 +923,11 @@ export function Products() {
                                             </svg>
                                         </button>
                                     </div>
+                                    {errors.stock_minimo && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.stock_minimo}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>
