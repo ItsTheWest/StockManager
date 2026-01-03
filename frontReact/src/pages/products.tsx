@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabase-client";
 import { Message } from "../components/message";
 import { CategoryModal } from "../components/categoryModal";
+import { SearchableSelect } from "../components/searchableSelect";
 import { Link, useNavigate } from "react-router-dom";
 
 export function Products() {
@@ -12,7 +13,11 @@ export function Products() {
     const [isLoading, setIsLoading] = useState(false);
     const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
-    const [toastConfig, setToastConfig] = useState({ show: false, message: '' });
+    const [toastConfig, setToastConfig] = useState<{ show: boolean, message: string, type: 'success' | 'error' }>({ 
+        show: false, 
+        message: '', 
+        type: 'success' 
+    });
 
     // Listas de datos remotos (Categorías y Proveedores)
     const [categories, setCategories] = useState<any[]>([]);
@@ -45,7 +50,6 @@ export function Products() {
     const validationRules: { [key: string]: (value: string) => string } = {
         nombre: (value) => {
             if (!value.trim()) return "El nombre es obligatorio";
-            if (/\d/.test(value)) return "El nombre no puede contener números";
             if (value.length > 50) return "El nombre no puede exceder 50 caracteres";
             return "";
         },
@@ -175,7 +179,12 @@ export function Products() {
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             setIsLoading(false);
-            alert("Por favor corrige los errores antes de continuar");
+            window.scrollTo(0, 0);
+             setToastConfig({ 
+                    show: true, 
+                    message: "Algunos campos son incorrectos",
+                    type: 'error'
+                });
             return;
         }
 
@@ -196,14 +205,39 @@ export function Products() {
 
             if (pCreated) {
                 await supabase.from('Detalle_Productos').insert({ id_producto: pCreated.id, id_proveedor: newProduct.id_proveedor || null });
-                setToastConfig({ show: true, message: 'Producto guardado exitosamente' });
-                setTimeout(() => navigate('/inventory'), 1500);
+                // Navegar y mostrar el toast en la siguiente página
+                navigate('/inventory', { state: { successMessage: 'Producto guardado exitosamente' } });
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error:', error);
-            alert("Error al guardar en la base de datos");
+            // Error 23505 es el código de Postgres para "Unique Violation" (Duplicado)
+            if (error.code === '23505') {
+                // Unificamos toda la información del error para buscar coincidencias
+                const combinedInfo = `${error.message || ''} ${error.details || ''} ${error.detail || ''}`.toLowerCase();
+                
+                let fieldError = { ...errors };
+                let msg = "Ya existe un registro con estos datos únicos.";
+
+                if (combinedInfo.includes('codigo_barras')) {
+                    fieldError.codigo_barras = "Este código de barras ya está registrado.";
+                    msg = "El código de barras ya existe en el sistema.";
+                } 
+                setErrors(fieldError);
+                setToastConfig({ 
+                    show: true, 
+                    message: msg,
+                    type: 'error'
+                });
+            } else {
+                setToastConfig({ 
+                    show: true, 
+                    message: 'Hubo un error al intentar guardar el proveedor.',
+                    type: 'error'
+                });
+            }
         } finally {
             setIsLoading(false);
+            window.scrollTo(0, 0);
         }
     };
 
@@ -337,27 +371,15 @@ export function Products() {
                         <div className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div>
-                                    <label htmlFor="category" className="block text-base font-medium text-gray-700 mb-2">Categoría</label>
-                                    <div className="flex gap-2">
-                                        <div className="relative flex-1">
-                                            <select
-                                                id="category"
-                                                value={newProduct.id_categoria}
-                                                onChange={(e) => handleInputChange('id_categoria', e.target.value)}
-                                                className={`w-full px-4 py-2.5 border rounded-lg outline-none appearance-none bg-white ${
-                                                    errors.id_categoria ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                                                }`}
-                                            >
-                                                <option value="">Seleccione Categoría</option>
-                                                {categories.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                                            </select>
-                                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" /></svg>
-                                            </div>
-                                        </div>
-                                        <button type="button" onClick={() => setIsAddCategoryModalOpen(true)} className="px-3 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm">＋</button>
-                                    </div>
-                                    {errors.id_categoria && <p className="mt-1 text-sm text-red-600">{errors.id_categoria}</p>}
+                                    <SearchableSelect
+                                        label="Categoría"
+                                        options={categories}
+                                        value={newProduct.id_categoria}
+                                        onChange={(val) => handleInputChange('id_categoria', val)}
+                                        placeholder="Seleccione Categoría"
+                                        error={errors.id_categoria}
+                                        onAddClick={() => setIsAddCategoryModalOpen(true)}
+                                    />
                                 </div>
 
                                 <div>
@@ -378,24 +400,14 @@ export function Products() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div>
-                                    <label htmlFor="supplier" className="block text-base font-medium text-gray-700 mb-2">Proveedor Principal</label>
-                                    <div className="relative">
-                                        <select
-                                            id="supplier"
-                                            value={newProduct.id_proveedor}
-                                            onChange={(e) => handleInputChange('id_proveedor', e.target.value)}
-                                            className={`w-full px-4 py-2.5 border rounded-lg outline-none appearance-none bg-white ${
-                                                errors.id_proveedor ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                                            }`}
-                                        >
-                                            <option value="">Seleccione Proveedor</option>
-                                            {providers.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-                                        </select>
-                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" /></svg>
-                                        </div>
-                                    </div>
-                                    {errors.id_proveedor && <p className="mt-1 text-sm text-red-600">{errors.id_proveedor}</p>}
+                                    <SearchableSelect
+                                        label="Proveedor Principal"
+                                        options={providers}
+                                        value={newProduct.id_proveedor}
+                                        onChange={(val) => handleInputChange('id_proveedor', val)}
+                                        placeholder="Seleccione Proveedor"
+                                        error={errors.id_proveedor}
+                                    />
                                 </div>
 
                                 <div>
@@ -578,12 +590,13 @@ export function Products() {
                 <CategoryModal
                     isOpen={isAddCategoryModalOpen}
                     onClose={() => setIsAddCategoryModalOpen(false)}
-                    onSuccess={() => { getCategories(); setToastConfig({ show: true, message: 'Categoría añadida' }); }}
+                    onSuccess={() => { getCategories(); setToastConfig({ show: true, message: 'Categoría añadida', type: 'success' }); }}
                 />
 
                 <Message
                     message={toastConfig.message}
                     isVisible={toastConfig.show}
+                    type={toastConfig.type}
                     onClose={() => setToastConfig({ ...toastConfig, show: false })}
                 />
             </div>

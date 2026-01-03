@@ -231,12 +231,12 @@ export function Categorias() {
                                     ) : (
                                         <>
                                             {paginatedCategories.map((category, index) => (
-                                                <tr key={category.id} className="hover:bg-gray-50 transition-colors group">
+                                                <tr key={category.id} className="hover:bg-gray-50 transition-colors group h-[81px]">
                                                     <td className="p-5 font-medium text-gray-900 text-center">
                                                         {category.nombre}
                                                     </td>
                                                     <td className="p-5 text-gray-600 text-center">
-                                                        {category.descripcion}
+                                                        <div className="line-clamp-2">{category.descripcion}</div>
                                                     </td>
                                                     <td className={`p-5 text-right relative ${openActionMenuId === category.id ? "z-20" : "z-0"}`}>
                                                         <button
@@ -318,15 +318,16 @@ export function Categorias() {
                                     </svg>
                                 </button>
 
-                                {Array.from({ length: totalPages }).map((_, i) => (
+                                {Array.from({ length: Math.max(1, totalPages) }).map((_, i) => (
                                     <button
                                         key={i + 1}
                                         onClick={() => paginate(i + 1)}
+                                        disabled={totalPages === 0}
                                         className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all ${
                                             currentPage === i + 1 
                                             ? "bg-blue-600 text-white shadow-sm" 
                                             : "text-gray-600 hover:bg-gray-50 border border-transparent hover:border-gray-200" 
-                                        }`}
+                                        } ${totalPages === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
                                     >
                                         {i + 1}
                                     </button>

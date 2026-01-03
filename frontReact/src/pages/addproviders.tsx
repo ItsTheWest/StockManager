@@ -9,16 +9,21 @@ export function AddProviders() {
     // --- 1. CONSTANTES Y ESTADOS ---
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
-    const [toastConfig, setToastConfig] = useState({ show: false, message: '' });
+    const [toastConfig, setToastConfig] = useState<{ show: boolean, message: string, type: 'success' | 'error' }>({ 
+        show: false, 
+        message: '', 
+        type: 'success' 
+    });
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
     // Estado para el RIF dividido (Letra + Número)
     const [rifLetter, setRifLetter] = useState("J");
     const [rifNumber, setRifNumber] = useState("");
+    const [areaCode, setAreaCode] = useState("0414");
+    const [phoneNum, setPhoneNum] = useState("");
 
     const [newProvider, setNewProvider] = useState({
         nombre: "",
-        telefono: "",
         ubicacion: "",
         correo: "",
         nombre_contacto: "",
@@ -33,10 +38,13 @@ export function AddProviders() {
         rif_number: (value) => {
             if (!value.trim()) return "El RIF es obligatorio";
             if (!/^\d+$/.test(value)) return "Solo números";
+            if (value.length < 7 || value.length > 10) return "El RIF debe tener entre 7 y 10 dígitos";
             return "";
         },
-        telefono: (value) => {
+        phone_number: (value) => {
             if (!value.trim()) return "El teléfono es obligatorio";
+            if (!/^\d+$/.test(value)) return "Solo números";
+            if (value.length < 7) return "Mínimo 7 dígitos";
             return "";
         },
         correo: (value) => {
@@ -50,6 +58,7 @@ export function AddProviders() {
         },
         nombre_contacto: (value) => {
             if (!value.trim()) return "El contacto es obligatorio";
+            if (!/^[a-zA-Z ]+$/.test(value)) return "Solo letras";
             return "";
         }
     };
@@ -75,7 +84,11 @@ export function AddProviders() {
         const rErr = validateField('rif_number', rifNumber);
         if (rErr) newErrors['rif'] = rErr;
 
-        // Validar otros
+        // Validar teléfono
+        const pErr = validateField('phone_number', phoneNum);
+        if (pErr) newErrors['telefono'] = pErr;
+
+        // Validar campos de newProvider
         Object.keys(newProvider).forEach(key => {
             const err = validateField(key, (newProvider as any)[key]);
             if (err) newErrors[key] = err;
@@ -84,26 +97,61 @@ export function AddProviders() {
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             setIsLoading(false);
+            window.scrollTo(0, 0);
             return;
         }
 
         try {
             const fullRif = `${rifLetter}-${rifNumber}`;
+            const fullPhone = `${areaCode}-${phoneNum}`;
             const { error } = await supabase.from('Proveedores').insert({
                 ...newProvider,
                 rif: fullRif,
+                telefono: fullPhone,
                 estado: true
             });
 
             if (error) throw error;
-
-            setToastConfig({ show: true, message: 'Proveedor registrado con éxito' });
-            setTimeout(() => navigate('/providers'), 1500);
-        } catch (error) {
+            
+            navigate('/providers', { state: { successMessage: 'Proveedor registrado con éxito' } });
+        } catch (error: any) {
             console.error('Error:', error);
-            alert("Error al guardar el proveedor");
+            
+            // Error 23505 es el código de Postgres para "Unique Violation" (Duplicado)
+            if (error.code === '23505') {
+                // Unificamos toda la información del error para buscar coincidencias
+                const combinedInfo = `${error.message || ''} ${error.details || ''} ${error.detail || ''}`.toLowerCase();
+                
+                let fieldError = { ...errors };
+                let msg = "Ya existe un registro con estos datos únicos.";
+
+                if (combinedInfo.includes('rif')) {
+                    fieldError.rif = "Este RIF ya está registrado.";
+                    msg = "El RIF ya existe en el sistema.";
+                } else if (combinedInfo.includes('telefono')) {
+                    fieldError.telefono = "Este teléfono ya está registrado.";
+                    msg = "El número de teléfono ya existe.";
+                } else if (combinedInfo.includes('correo') || combinedInfo.includes('email')) {
+                    fieldError.correo = "Este correo ya está registrado.";
+                    msg = "El correo electrónico ya existe.";
+                }
+
+                setErrors(fieldError);
+                setToastConfig({ 
+                    show: true, 
+                    message: msg,
+                    type: 'error'
+                });
+            } else {
+                setToastConfig({ 
+                    show: true, 
+                    message: 'Hubo un error al intentar guardar el proveedor.',
+                    type: 'error'
+                });
+            }
         } finally {
             setIsLoading(false);
+            window.scrollTo(0, 0);
         }
     };
 
@@ -116,7 +164,7 @@ export function AddProviders() {
                     <p className="text-gray-500 mt-1">Completa la información del proveedor para registrarlo en el sistema.</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} noValidate className="space-y-6">
                     {/* Form Container: Información de la Empresa */}
                     <div className="bg-white border rounded-xl shadow-sm border-gray-200">
                         {/* Section Title */}
@@ -228,16 +276,38 @@ export function AddProviders() {
                                     <label htmlFor="telefono" className="block text-base font-medium text-gray-700 mb-2">
                                         Teléfono
                                     </label>
-                                    <input
-                                        value={newProvider.telefono}
-                                        onChange={(e) => handleInputChange('telefono', e.target.value)}
-                                        type="tel"
-                                        id="telefono"
-                                        placeholder={errors.telefono || "Ingrese el número de teléfono"}
-                                        className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 outline-none transition-all ${
-                                            errors.telefono ? 'border-red-500 placeholder-red-500 ring-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                                        }`}
-                                    />
+                                    <div className="flex">
+                                        <select
+                                            value={areaCode}
+                                            onChange={(e) => setAreaCode(e.target.value)}
+                                            className="px-4 py-2.5 border border-gray-300 rounded-l-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all border-r-0"
+                                        >
+                                            <option value="0414">0414</option>
+                                            <option value="0424">0424</option>
+                                            <option value="0412">0412</option>
+                                            <option value="0416">0416</option>
+                                            <option value="0426">0426</option>
+                                            <option value="0212">0212</option>
+                                            <option value="0241">0241</option>
+                                            <option value="0243">0243</option>
+                                            <option value="0251">0251</option>
+                                            <option value="0261">0261</option>
+                                            <option value="0281">0281</option>
+                                        </select>
+                                        <input
+                                            value={phoneNum}
+                                            onChange={(e) => {
+                                                setPhoneNum(e.target.value);
+                                                if (errors.telefono) setErrors({...errors, telefono: ""});
+                                            }}
+                                            type="tel"
+                                            id="telefono"
+                                            placeholder={errors.telefono || "Número de teléfono"}
+                                            className={`w-full px-4 py-2.5 border rounded-r-lg focus:ring-2 outline-none transition-all ${
+                                                errors.telefono ? 'border-red-500 placeholder-red-500 ring-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                                            }`}
+                                        />
+                                    </div>
                                     {errors.telefono && <p className="text-red-500 text-xs mt-1">{errors.telefono}</p>}
                                 </div>
                             </div>
@@ -250,7 +320,7 @@ export function AddProviders() {
                                     <input
                                         value={newProvider.correo}
                                         onChange={(e) => handleInputChange('correo', e.target.value)}
-                                        type="email"
+                                        type="text"
                                         id="correo"
                                         placeholder={errors.correo || "Ingrese el correo electrónico"}
                                         className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 outline-none transition-all ${
@@ -287,6 +357,7 @@ export function AddProviders() {
             <Message
                 message={toastConfig.message}
                 isVisible={toastConfig.show}
+                type={toastConfig.type}
                 onClose={() => setToastConfig({...toastConfig, show: false})}
             />
         </Menu>

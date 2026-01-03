@@ -14,6 +14,7 @@ export function CategoryModal({ isOpen, onClose, onSuccess }: CategoryModalProps
         descripcion: "",
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errors, setErrors] = useState<{ nombre?: string }>({});
     const modalRef = useRef<HTMLDivElement>(null);
 
     // Bloquear scroll del body cuando el modal está abierto
@@ -24,6 +25,7 @@ export function CategoryModal({ isOpen, onClose, onSuccess }: CategoryModalProps
             document.body.style.overflow = 'unset';
             // Resetear el estado al cerrar
             setNewCategory({ nombre: "", descripcion: "" });
+            setErrors({});
         }
         return () => {
             document.body.style.overflow = 'unset';
@@ -48,14 +50,20 @@ export function CategoryModal({ isOpen, onClose, onSuccess }: CategoryModalProps
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
+        setErrors({});
+
         try {
             const { error } = await supabase
                 .from('Categorias')
                 .insert({ ...newCategory, estado: true });
             
             if (error) {
-                console.error('Error al agregar la categoría:', error);
-                alert("Error al agregar la categoría");
+                if (error.code === '23505') {
+                    setErrors({ nombre: "Esta categoría ya existe" });
+                } else {
+                    console.error('Error al agregar la categoría:', error);
+                    alert("Error al agregar la categoría");
+                }
             } else {
                 setNewCategory({ nombre: "", descripcion: "" });
                 onSuccess();
@@ -103,14 +111,22 @@ export function CategoryModal({ isOpen, onClose, onSuccess }: CategoryModalProps
                             </label>
                             <input
                                 value={newCategory.nombre}
-                                onChange={(e) => setNewCategory({ ...newCategory, nombre: e.target.value })}
+                                onChange={(e) => {
+                                    setNewCategory({ ...newCategory, nombre: e.target.value });
+                                    if (errors.nombre) setErrors({ ...errors, nombre: undefined });
+                                }}
                                 type="text"
                                 id="modal_nombre"
                                 name="nombre"
                                 required
-                                className="block w-full px-4 py-2.5 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                className={`block w-full px-4 py-2.5 border rounded-lg leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
+                                    errors.nombre 
+                                        ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                                        : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                                }`}
                                 placeholder="Ej: Electrónica"
                             />
+                            {errors.nombre && <p className="mt-1 text-sm text-red-500">{errors.nombre}</p>}
                         </div>
 
                         {/* Input Descripción */}

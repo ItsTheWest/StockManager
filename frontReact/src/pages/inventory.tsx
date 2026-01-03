@@ -1,7 +1,7 @@
 
 import { Menu } from "../components/menu";
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { supabase } from "../supabase-client";
 import { Message } from "../components/message";
 import { DeleteModal } from "../components/deleteModal";
@@ -69,7 +69,17 @@ export function Inventory() {
     // --- 3. LÓGICA DE ELIMINACIÓN (MODAL Y TOAST) ---
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [productToDelete, setProductToDelete] = useState<number | null>(null);
-    const [toastConfig, setToastConfig] = useState({ show: false, message: '' });
+    const [toastConfig, setToastConfig] = useState<{ show: boolean, message: string, type?: 'success' | 'error' }>({ show: false, message: '' });
+
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.state?.successMessage) {
+            setToastConfig({ show: true, message: location.state.successMessage, type: 'success' });
+            // Limpiar el estado para que no se muestre de nuevo al recargar (opcional, pero recomendado)
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
 
     // Se ejecuta al hacer clic en borrar en la tabla
     const handleDeleteClick = (id: number, e: React.MouseEvent) => {
@@ -238,7 +248,7 @@ export function Inventory() {
                                     ) : (
                                         <>
                                             {paginatedProducts.map((product, index) => (
-                                                <tr key={product.id} className="hover:bg-gray-50 transition-colors group">
+                                                <tr key={product.id} className="hover:bg-gray-50 transition-colors group h-[81px]">
                                                     <td className="p-5">
                                                         <div className="flex items-center justify-center gap-4">
                                                             <div className="h-10 w-10 flex-shrink-0">
@@ -248,7 +258,7 @@ export function Inventory() {
                                                                     alt={product.nombre} 
                                                                 />
                                                             </div>
-                                                            <div className="font-medium text-gray-900">{product.nombre}</div>
+                                                            <div className="font-medium text-gray-900 line-clamp-2">{product.nombre}</div>
                                                         </div>
                                                     </td>
                                                     <td className="p-5 text-gray-600 text-center">
@@ -350,15 +360,16 @@ export function Inventory() {
                                     </svg>
                                 </button>
 
-                                {Array.from({ length: totalPages }).map((_, i) => (
+                                {Array.from({ length: Math.max(1, totalPages) }).map((_, i) => (
                                     <button
                                         key={i + 1}
                                         onClick={() => paginate(i + 1)}
+                                        disabled={totalPages === 0}
                                         className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all ${
                                             currentPage === i + 1 
                                             ? "bg-blue-600 text-white shadow-sm" 
                                             : "text-gray-600 hover:bg-gray-50 border border-transparent hover:border-gray-200" 
-                                        }`}
+                                        } ${totalPages === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
                                     >
                                         {i + 1}
                                     </button>
@@ -389,6 +400,7 @@ export function Inventory() {
             <Message
                 message={toastConfig.message}
                 isVisible={toastConfig.show}
+                type={toastConfig.type}
                 onClose={() => setToastConfig({ ...toastConfig, show: false })}
             />
         </Menu>

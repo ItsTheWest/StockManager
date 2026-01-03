@@ -1,7 +1,7 @@
 
 import { Menu } from "../components/menu";
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { supabase } from "../supabase-client";
 import { Message } from "../components/message";
 import { DeleteModal } from "../components/deleteModal";
@@ -68,7 +68,16 @@ export function Providers() {
     // --- 3. LÓGICA DE ELIMINACIÓN (MODAL Y TOAST) ---
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [providerToDelete, setProviderToDelete] = useState<number | null>(null);
-    const [toastConfig, setToastConfig] = useState({ show: false, message: '' });
+    const [toastConfig, setToastConfig] = useState<{ show: boolean, message: string, type?: 'success' | 'error' }>({ show: false, message: '' });
+
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.state?.successMessage) {
+            setToastConfig({ show: true, message: location.state.successMessage, type: 'success' });
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
 
     const handleDeleteClick = (id: number, e: React.MouseEvent) => {
         e.stopPropagation(); 
@@ -235,23 +244,23 @@ export function Providers() {
                                     ) : (
                                         <>
                                             {paginatedProviders.map((provider, index) => (
-                                                <tr key={provider.id} className="hover:bg-gray-50 transition-colors group">
+                                                <tr key={provider.id} className="hover:bg-gray-50 transition-colors group h-[81px]">
                                                     <td className="p-5 text-gray-600 font-mono text-sm text-center">
                                                         {provider.rif}
                                                     </td>
                                                     <td className="p-5 text-gray-900 font-medium text-center">
-                                                        {provider.nombre}
+                                                        <div className="line-clamp-2">{provider.nombre}</div>
                                                     </td>
                                                     <td className="p-5 text-gray-600 text-center">
                                                         {provider.telefono}
                                                     </td>
                                                     <td className="p-5 text-gray-600 text-center">
-                                                        {provider.ubicacion}
+                                                        <div className="line-clamp-2">{provider.ubicacion}</div>
                                                     </td>
                                                     <td className="p-5 text-gray-600 text-center">
-                                                        <div className="flex flex-col">
-                                                            <span className="font-medium text-gray-800">{provider.nombre_contacto}</span>
-                                                            <span className="text-xs">{provider.correo}</span>
+                                                        <div className="flex flex-col items-center">
+                                                            <span className="font-medium text-gray-800 line-clamp-1">{provider.nombre_contacto}</span>
+                                                            <span className="text-xs line-clamp-1" title={provider.correo}>{provider.correo}</span>
                                                         </div>
                                                     </td>
                                                     <td className={`p-5 text-right relative ${openActionMenuId === provider.id ? "z-20" : "z-0"}`}>
@@ -334,15 +343,16 @@ export function Providers() {
                                     </svg>
                                 </button>
 
-                                {Array.from({ length: totalPages }).map((_, i) => (
+                                {Array.from({ length: Math.max(1, totalPages) }).map((_, i) => (
                                     <button
                                         key={i + 1}
                                         onClick={() => paginate(i + 1)}
+                                        disabled={totalPages === 0}
                                         className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all ${
                                             currentPage === i + 1 
                                             ? "bg-blue-600 text-white shadow-sm" 
                                             : "text-gray-600 hover:bg-gray-50 border border-transparent hover:border-gray-200" 
-                                        }`}
+                                        } ${totalPages === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
                                     >
                                         {i + 1}
                                     </button>
@@ -373,6 +383,7 @@ export function Providers() {
             <Message
                 message={toastConfig.message}
                 isVisible={toastConfig.show}
+                type={toastConfig.type}
                 onClose={() => setToastConfig({ ...toastConfig, show: false })}
             />
         </Menu>
