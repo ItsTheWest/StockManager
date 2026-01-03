@@ -2,58 +2,48 @@
 import { Menu } from "../components/menu";
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-
-// Mock data for Providers
-const initialProviders = [
-    {
-        id: 1,
-        rif: "J-12345678-9",
-        nombre: "Distribuidora Los Andes",
-        telefono: "0414-1234567",
-        ubicacion: "Mérida, Venezuela"
-    },
-    {
-        id: 2,
-        rif: "J-98765432-1",
-        nombre: "Tech World S.A.",
-        telefono: "0212-9876543",
-        ubicacion: "Caracas, Venezuela"
-    },
-    {
-        id: 3,
-        rif: "J-45678901-2",
-        nombre: "Suministros Globales",
-        telefono: "0424-5551234",
-        ubicacion: "Valencia, Venezuela"
-    },
-    {
-        id: 4,
-        rif: "G-20000000-1",
-        nombre: "Importadora del Norte",
-        telefono: "0261-7000000",
-        ubicacion: "Maracaibo, Venezuela"
-    },
-    {
-        id: 5,
-        rif: "V-12345678",
-        nombre: "Servicios Integrales Pérez",
-        telefono: "0412-1112233",
-        ubicacion: "Barquisimeto, Venezuela"
-    },
-    {
-        id: 6,
-        rif: "J-33344455-6",
-        nombre: "Electrodomésticos Oriente",
-        telefono: "0281-2223344",
-        ubicacion: "Puerto La Cruz, Venezuela"
-    }
-];
+import { supabase } from "../supabase-client";
+import { Message } from "../components/message";
+import { DeleteModal } from "../components/deleteModal";
 
 export function Providers() {
+    // --- 1. ESTADO Y OBTENCIÓN DE DATOS ---
+    const [providers, setProviders] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Función para obtener proveedores desde Supabase
+    const getProviders = async () => {
+        setIsLoading(true);
+        try {
+            const { error, data } = await supabase
+                .from('Proveedores')
+                .select('*')
+                .eq('estado', true) // Solo mostrar proveedores activos
+                .order('nombre', { ascending: true });
+                
+            if (error) {
+                console.error('Error al obtener los proveedores:', error);
+                return;
+            }
+            if (data) {
+                setProviders(data);
+            }
+        } catch (err) {
+            console.error('Error inesperado:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        getProviders();
+    }, []);
+
+    // --- 2. LÓGICA DEL MENÚ DE ACCIONES (TRES PUNTOS) ---
     const [openActionMenuId, setOpenActionMenuId] = useState<number | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
-    // Close menu when clicking outside
+    // Cerrar el menú al hacer clic fuera de él
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -75,6 +65,80 @@ export function Providers() {
         }
     };
 
+    // --- 3. LÓGICA DE ELIMINACIÓN (MODAL Y TOAST) ---
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [providerToDelete, setProviderToDelete] = useState<number | null>(null);
+    const [toastConfig, setToastConfig] = useState({ show: false, message: '' });
+
+    const handleDeleteClick = (id: number, e: React.MouseEvent) => {
+        e.stopPropagation(); 
+        setProviderToDelete(id);
+        setIsDeleteModalOpen(true);
+        setOpenActionMenuId(null);
+    };
+
+    const confirmDelete = async () => {
+        if (!providerToDelete) return;
+
+        try {
+            const { error } = await supabase
+                .from('Proveedores')
+                .update({ estado: false })
+                .eq('id', providerToDelete);
+
+            if (error) {
+                console.error('Error al eliminar:', error);
+            } else {
+                setProviders(providers.filter(p => p.id !== providerToDelete));
+                setToastConfig({ show: true, message: 'Proveedor eliminado correctamente' });
+            }
+        } catch (err) {
+            console.error('Error:', err);
+        } finally {
+            setIsDeleteModalOpen(false);
+            setProviderToDelete(null);
+        }
+    };
+
+    const cancelDelete = () => {
+        setIsDeleteModalOpen(false);
+        setProviderToDelete(null);
+    };
+
+    // --- 4. LÓGICA DE BÚSQUEDA ---
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const filteredProviders = providers.filter((provider) => {
+        const query = searchTerm.toLowerCase();
+        return (
+            provider.nombre.toLowerCase().includes(query) ||
+            provider.rif.toLowerCase().includes(query) ||
+            (provider.ubicacion || "").toLowerCase().includes(query)
+        );
+    });
+
+    // --- 5. LÓGICA DE PAGINACIÓN ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    
+    const paginatedProviders = filteredProviders.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredProviders.length / itemsPerPage);
+
+    const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+    // Resetear a la página 1 cuando se realiza una nueva búsqueda
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
+
+    // --- 6. CONSTANTES DE DISEÑO (PARA MANTENER ESTRUCTURA) ---
+    const ROW_HEIGHT = 81; 
+    const MIN_ROWS = 5;
+    const TABLE_MIN_HEIGHT = `${ROW_HEIGHT * MIN_ROWS}px`;
+
     return (
         <Menu>
             <div className="font-sans min-h-screen">
@@ -83,7 +147,7 @@ export function Providers() {
                     <div className="flex justify-between items-start mb-8">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900">Proveedores</h1>
-                            <p className="text-gray-500 mt-1">Gestiona la información de tus proveedores.</p>
+                            <p className="text-gray-500 mt-1">Gestiona la información de tus proveedores y contactos.</p>
                         </div>
                     </div>
 
@@ -102,6 +166,8 @@ export function Providers() {
                                         type="text"
                                         className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                         placeholder="Buscar..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
                                     />
                                 </div>
                                 <button className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-medium text-sm">
@@ -111,7 +177,7 @@ export function Providers() {
                                     Filtrar
                                 </button>
                             </div>
-                            <Link to="/addproviders"> {/* Assuming /addprovider exists or will exist, otherwise just a button */}
+                            <Link to="/addproviders">
                                 <button className="flex items-center gap-2 px-4 py-2 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow-sm transition-colors">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -138,77 +204,116 @@ export function Providers() {
                                         <th className="p-5 text-xs font-semibold text-white uppercase tracking-wider text-center">
                                             Ubicación
                                         </th>
+                                        <th className="p-5 text-xs font-semibold text-white uppercase tracking-wider text-center">
+                                            Contacto
+                                        </th>
                                         <th className="p-5"></th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    {initialProviders.map((provider, index) => (
-                                        <tr key={provider.id} className="hover:bg-gray-50 transition-colors group">
-                                            <td className="p-5 text-gray-600 font-mono text-sm text-center">
-                                                {provider.rif}
-                                            </td>
-                                            <td className="p-5 text-gray-900 font-medium text-center">
-                                                {provider.nombre}
-                                            </td>
-                                            <td className="p-5 text-gray-600 text-center">
-                                                {provider.telefono}
-                                            </td>
-                                            <td className="p-5 text-gray-600 text-center">
-                                                {provider.ubicacion}
-                                            </td>
-                                            <td className={`p-5 text-right relative ${openActionMenuId === provider.id ? "z-20" : "z-0"}`}>
-                                                <button
-                                                    onClick={(e) => toggleActionMenu(provider.id, e)}
-                                                    className="text-gray-400 cursor-pointer hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
-                                                >
-                                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                                        <circle cx="12" cy="12" r="2" />
-                                                        <circle cx="19" cy="12" r="2" />
-                                                        <circle cx="5" cy="12" r="2" />
-                                                    </svg>
-                                                </button>
-
-                                                {/* Action Menu */}
-                                                {openActionMenuId === provider.id && (
-                                                    <div
-                                                        ref={menuRef}
-                                                        className={`absolute right-8 w-40 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-1 animation-fade-in ${index >= initialProviders.length - 2 ? "bottom-8 origin-bottom-right" : "top-8 origin-top-right"
-                                                            }`}
-                                                        style={{ animation: "fadeIn 0.2s ease-out" }}
-                                                    >
-                                                        <button
-                                                            className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-2"
-                                                            onClick={(e) => { e.stopPropagation(); setOpenActionMenuId(null); }}
-                                                        >
-                                                            <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                            </svg>
-                                                            Ver detalles
-                                                        </button>
-                                                        <button
-                                                            className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2"
-                                                            onClick={(e) => { e.stopPropagation(); setOpenActionMenuId(null); }}
-                                                        >
-                                                            <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                                            </svg>
-                                                            Editar
-                                                        </button>
-                                                        <button
-                                                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
-                                                            onClick={(e) => { e.stopPropagation(); setOpenActionMenuId(null); }}
-                                                        >
-                                                            <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                            </svg>
-                                                            Eliminar
-                                                        </button>
-                                                    </div>
-                                                )}
+                                    {isLoading ? (
+                                        <tr>
+                                            <td colSpan={6} style={{ height: TABLE_MIN_HEIGHT }}>
+                                                <div className="flex flex-col items-center justify-center">
+                                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                                                    <p className="text-gray-500 font-medium">Cargando proveedores...</p>
+                                                </div>
                                             </td>
                                         </tr>
-                                    ))}
+                                    ) : filteredProviders.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={6} style={{ height: TABLE_MIN_HEIGHT }}>
+                                                <div className="flex flex-col items-center justify-center text-gray-400">
+                                                    <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                                    </svg>
+                                                    <p className="text-lg font-medium text-gray-600">No se encontraron resultados</p>
+                                                    <p className="text-sm">No pudimos encontrar nada que coincida con "{searchTerm}"</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        <>
+                                            {paginatedProviders.map((provider, index) => (
+                                                <tr key={provider.id} className="hover:bg-gray-50 transition-colors group">
+                                                    <td className="p-5 text-gray-600 font-mono text-sm text-center">
+                                                        {provider.rif}
+                                                    </td>
+                                                    <td className="p-5 text-gray-900 font-medium text-center">
+                                                        {provider.nombre}
+                                                    </td>
+                                                    <td className="p-5 text-gray-600 text-center">
+                                                        {provider.telefono}
+                                                    </td>
+                                                    <td className="p-5 text-gray-600 text-center">
+                                                        {provider.ubicacion}
+                                                    </td>
+                                                    <td className="p-5 text-gray-600 text-center">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-medium text-gray-800">{provider.nombre_contacto}</span>
+                                                            <span className="text-xs">{provider.correo}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className={`p-5 text-right relative ${openActionMenuId === provider.id ? "z-20" : "z-0"}`}>
+                                                        <button
+                                                            onClick={(e) => toggleActionMenu(provider.id, e)}
+                                                            className="text-gray-400 cursor-pointer hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                                                        >
+                                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                                <circle cx="12" cy="12" r="2" />
+                                                                <circle cx="19" cy="12" r="2" />
+                                                                <circle cx="5" cy="12" r="2" />
+                                                            </svg>
+                                                        </button>
+
+                                                        {openActionMenuId === provider.id && (
+                                                            <div
+                                                                ref={menuRef}
+                                                                className={`absolute right-8 w-40 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-1 animation-fade-in ${index >= paginatedProviders.length - 2 ? "bottom-8 origin-bottom-right" : "top-8 origin-top-right"
+                                                                    }`}
+                                                                style={{ animation: "fadeIn 0.2s ease-out" }}
+                                                            >
+                                                                <button
+                                                                    className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-2"
+                                                                    onClick={(e) => { e.stopPropagation(); setOpenActionMenuId(null); }}
+                                                                >
+                                                                    <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                                    </svg>
+                                                                    Ver detalles
+                                                                </button>
+                                                                <button
+                                                                    className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2"
+                                                                    onClick={(e) => { e.stopPropagation(); setOpenActionMenuId(null); }}
+                                                                >
+                                                                    <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                                    </svg>
+                                                                    Editar
+                                                                </button>
+                                                                <button
+                                                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                                                                    onClick={(e) => handleDeleteClick(provider.id, e)}
+                                                                >
+                                                                    <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                    </svg>
+                                                                    Eliminar
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            {/* Filas vacías de relleno si hay menos de 5 resultados */}
+                                            {Array.from({ length: Math.max(0, MIN_ROWS - paginatedProviders.length) }).map((_, i) => (
+                                                <tr key={`empty-${i}`} style={{ height: `${ROW_HEIGHT}px` }}>
+                                                    <td colSpan={6}>&nbsp;</td>
+                                                </tr>
+                                            ))}
+                                        </>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -216,18 +321,38 @@ export function Providers() {
                         {/* Footer / Pagination */}
                         <div className="p-5 border-t border-gray-100 flex items-center justify-between">
                             <div className="text-sm text-gray-600 font-medium">
-                                Mostrando <span className="font-bold text-gray-900">1</span> a <span className="font-bold text-gray-900">{initialProviders.length}</span> de <span className="font-bold text-gray-900">{initialProviders.length}</span>
+                                Mostrando <span className="font-bold text-gray-900">{filteredProviders.length > 0 ? indexOfFirstItem + 1 : 0}</span> a <span className="font-bold text-gray-900">{Math.min(indexOfLastItem, filteredProviders.length)}</span> de <span className="font-bold text-gray-900">{filteredProviders.length}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <button className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 disabled:opacity-50" disabled>
+                                <button 
+                                    onClick={() => paginate(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                    className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                                     </svg>
                                 </button>
-                                <button className="w-9 h-9 flex items-center justify-center rounded-lg text-sm font-semibold text-white bg-blue-600 shadow-sm">
-                                    1
-                                </button>
-                                <button className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 disabled:opacity-50" disabled>
+
+                                {Array.from({ length: totalPages }).map((_, i) => (
+                                    <button
+                                        key={i + 1}
+                                        onClick={() => paginate(i + 1)}
+                                        className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all ${
+                                            currentPage === i + 1 
+                                            ? "bg-blue-600 text-white shadow-sm" 
+                                            : "text-gray-600 hover:bg-gray-50 border border-transparent hover:border-gray-200" 
+                                        }`}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                ))}
+
+                                <button 
+                                    onClick={() => paginate(currentPage + 1)}
+                                    disabled={currentPage === totalPages || totalPages === 0}
+                                    className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                                     </svg>
@@ -237,6 +362,19 @@ export function Providers() {
                     </div>
                 </main>
             </div>
+            
+            {/* Componentes de Feedback y Acción */}
+            <DeleteModal
+                isOpen={isDeleteModalOpen}
+                onClose={cancelDelete}
+                onConfirm={confirmDelete}
+            />
+
+            <Message
+                message={toastConfig.message}
+                isVisible={toastConfig.show}
+                onClose={() => setToastConfig({ ...toastConfig, show: false })}
+            />
         </Menu>
     );
 }

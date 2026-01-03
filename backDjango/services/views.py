@@ -94,3 +94,13 @@ def getBcv(request):
             "process": False, 
             "error": str(e) # Convierte el objeto de error a un string legible.
         }, status=500) # Devuelve un error interno del servidor (500).          # Aquí es donde el B
+
+# Vista raíz de la API para listar endpoints disponibles
+
+def api_root(request):
+    """Devuelve una lista básica de endpoints disponibles en la API."""
+    return JsonResponse({
+        "endpoints": {
+            "dolar_bcv": request.build_absolute_uri("/services/dolar-bcv/"),
+        }
+    })
