@@ -42,6 +42,7 @@ export function Categorias() {
     // --- 2. LÓGICA DEL MENÚ DE ACCIONES (TRES PUNTOS) ---
     const [openActionMenuId, setOpenActionMenuId] = useState<number | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [categoryToEdit, setCategoryToEdit] = useState<any>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
     // Cerrar el menú al hacer clic fuera de él
@@ -139,8 +140,20 @@ export function Categorias() {
     const TABLE_MIN_HEIGHT = `${ROW_HEIGHT * MIN_ROWS}px`;
 
     const handleAddSuccess = () => {
-        setToastConfig({ show: true, message: 'Categoría agregada exitosamente' });
+        setToastConfig({ show: true, message: categoryToEdit ? 'Categoría actualizada correctamente' : 'Categoría agregada exitosamente' });
         getCategories();
+    };
+
+    const handleEditClick = (category: any, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCategoryToEdit(category);
+        setIsAddModalOpen(true);
+        setOpenActionMenuId(null);
+    };
+
+    const handleCloseModal = () => {
+        setIsAddModalOpen(false);
+        setCategoryToEdit(null);
     };
 
     return (
@@ -269,7 +282,7 @@ export function Categorias() {
                                                                 </button>
                                                                 <button
                                                                     className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2"
-                                                                    onClick={(e) => { e.stopPropagation(); setOpenActionMenuId(null); }}
+                                                                    onClick={(e) => handleEditClick(category, e)}
                                                                 >
                                                                     <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -349,8 +362,9 @@ export function Categorias() {
 
                 <CategoryModal
                     isOpen={isAddModalOpen}
-                    onClose={() => setIsAddModalOpen(false)}
+                    onClose={handleCloseModal}
                     onSuccess={handleAddSuccess}
+                    category={categoryToEdit}
                 />
             </div>
             

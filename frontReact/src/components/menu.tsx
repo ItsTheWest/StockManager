@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
 interface MenuProps {
     children?: React.ReactNode;
@@ -10,6 +10,11 @@ export function Menu({ children }: MenuProps) {
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [inventarioOpen, setInventarioOpen] = useState(false);
     const [gestionOpen, setGestionOpen] = useState(false);
+    const { pathname } = useLocation();
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [pathname]);
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
@@ -203,6 +208,22 @@ export function Menu({ children }: MenuProps) {
                                 </ul>
                             )}
                         </li>
+                        
+                             {/* Facturación */}
+                        <li>
+                            <Link
+                                to="/billing"
+                                className="flex items-center p-2 text-gray-800 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200 group"
+                            >
+                                <svg className="w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-300 dark:group-hover:text-blue-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 19V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v13H7a2 2 0 0 0-2 2Zm0 0a2 2 0 0 0 2 2h12M9 3v14m5-14v14" />
+                                </svg>
+                                <span className="flex-1 ms-3 text-gray-800 font-semibold dark:group-hover:text-blue-600">Facturación</span>
+                            </Link>
+                        </li>
+
+
+
                         {/* Inbox */}
                         <li>
                             <a
@@ -234,6 +255,7 @@ export function Menu({ children }: MenuProps) {
                             </a>
 
                         </li>
+
 
                         {/* Products */}
                         <li>

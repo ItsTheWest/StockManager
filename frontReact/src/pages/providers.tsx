@@ -292,15 +292,17 @@ export function Providers() {
                                                                     </svg>
                                                                     Ver detalles
                                                                 </button>
-                                                                <button
-                                                                    className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2"
-                                                                    onClick={(e) => { e.stopPropagation(); setOpenActionMenuId(null); }}
-                                                                >
-                                                                    <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                                                    </svg>
-                                                                    Editar
-                                                                </button>
+                                                                <Link to={`/editproviders`} state={{ provider }}>
+                                                                    <button
+                                                                        className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2"
+                                                                        onClick={() => setOpenActionMenuId(null)}
+                                                                    >
+                                                                        <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                                        </svg>
+                                                                        Editar
+                                                                    </button>
+                                                                </Link>
                                                                 <button
                                                                     className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
                                                                     onClick={(e) => handleDeleteClick(provider.id, e)}

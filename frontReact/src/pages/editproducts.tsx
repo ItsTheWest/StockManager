@@ -1,22 +1,23 @@
-
 import { Menu } from "../components/menu";
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase-client";
 import { Message } from "../components/message";
 import { CategoryModal } from "../components/categoryModal";
 import { SearchableSelect } from "../components/searchableSelect";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
-export function Products() {
+export function EditProducts() {
     // ============================================================================
     // 1. ESTADOS E INICIALIZACIÓN (STATES & INIT)
     // ============================================================================
-    // Definición de hooks y estados necesarios para el ciclo de vida del componente.
+    // Definición de hooks y estados para manejar la edición de productos.
 
     const navigate = useNavigate(); // Hook de navegación
-    const [isLoading, setIsLoading] = useState(false); // Estado de carga (spinner/disabled buttons)
-    const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false); // Control del modal de categorías
-    const [errors, setErrors] = useState<{ [key: string]: string }>({}); // Almacén de errores de validación
+    const location = useLocation(); // Hook para obtener datos pasados por navegación (el producto a editar)
+    const [editingId, setEditingId] = useState<number | null>(null); // ID del producto siendo editado
+    const [isLoading, setIsLoading] = useState(false); // Estado de carga
+    const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false); // Modal de categoras
+    const [errors, setErrors] = useState<{ [key: string]: string }>({}); // Errores de validación
     
     // Configuración para el feedback visual (Toast)
     const [toastConfig, setToastConfig] = useState<{ show: boolean, message: string, type: 'success' | 'error' }>({ 
@@ -25,15 +26,16 @@ export function Products() {
         type: 'success' 
     });
 
-    // Listas de datos auxiliares para los selectores
-    const [categories, setCategories] = useState<any[]>([]); // Lista de categorías disponibles
-    const [providers, setProviders] = useState<any[]>([]); // Lista de proveedores disponibles
+    // Listas de datos auxiliares
+    const [categories, setCategories] = useState<any[]>([]);
+    const [providers, setProviders] = useState<any[]>([]);
 
-    // Estados para gestión de imagen
-    const [imagePreview, setImagePreview] = useState<string | null>(null); // URL blob para vista previa
-    const [imageFile, setImageFile] = useState<File | null>(null); // Archivo físico a subir
+    // Estados para gestión de imagen (Preview y Archivo)
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [imageFile, setImageFile] = useState<File | null>(null);
 
     // Estado principal del formulario (Modelo del Producto)
+    // Se inicializa vacío y se rellena en "Carga de Datos"
     const [newProduct, setNewProduct] = useState({
         codigo_barras: "",
         nombre: "",
@@ -47,16 +49,15 @@ export function Products() {
         margen_ganancia: "",
         stock: "",
         stock_minimo: "",
-        id_costo_moneda: "2", // Default: Bs
-        id_precio_moneda: "2", // Default: Bs
+        id_costo_moneda: "2",
+        id_precio_moneda: "2",
         id_proveedor: "",
     });
 
     // ============================================================================
     // 2. REGLAS DE NEGOCIO Y VALIDACIÓN (BUSINESS LOGIC)
     // ============================================================================
-    // Objeto centralizado que define las validaciones para cada campo específico.
-    // Retorna un string con el error o vacío si es válido.
+    // Objeto centralizado de reglas de validación.
 
     const validationRules: { [key: string]: (value: string) => string } = {
         nombre: (value) => {
@@ -92,7 +93,6 @@ export function Products() {
         stock: (value) => {
             if (!String(value).trim()) return "El stock es obligatorio";
             if (Number(value) < 0) return "El stock no puede ser negativo";
-            // Validación cruzada simple: Stock no debe ser menor al mínimo (aunque esto a veces se permite temporalmente, aquí se restringe)
             if (Number(value) < Number(newProduct.stock_minimo)) return "El stock no puede ser menor al stock mínimo";
             return "";
         },
@@ -124,11 +124,11 @@ export function Products() {
     };
 
     // ============================================================================
-    // 3. CARGA DE DATOS (DATA FETCHING)
+    // 3. CARGA DE DATOS (DATA FETCHING & PRE-FILLING)
     // ============================================================================
-    
+
     /**
-     * Obtiene las categorías activas desde Supabase para poblar el selector.
+     * Obtiene listas de categorías y proveedores.
      */
     const getCategories = async () => {
         const { error, data } = await supabase
@@ -139,9 +139,6 @@ export function Products() {
         if (!error && data) setCategories(data);
     };
 
-    /**
-     * Obtiene los proveedores activos desde Supabase.
-     */
     const getProviders = async () => {
         const { error, data } = await supabase
             .from('Proveedores')
@@ -151,18 +148,69 @@ export function Products() {
         if (!error && data) setProviders(data);
     };
 
-    // Efecto inicial: Carga los datos necesarios al montar el componente
+    // Carga inicial de listas desplegables
     useEffect(() => {
         getCategories();
         getProviders();
     }, []);
+
+    /**
+     * Efecto para PRE-LLENAR el formulario si venimos de la pantalla de edición.
+     * Extrae el producto desde 'location.state' y busca detalles adicionales (como proveedor).
+     */
+    useEffect(() => {
+        const productFromState = location.state?.product;
+        
+        if (productFromState) {
+            const p = productFromState;
+            setEditingId(p.id);
+            setImagePreview(p.imagen);
+            
+            // Mapeo detallado y seguro de los datos al estado
+            setNewProduct({
+                codigo_barras: String(p.codigo_barras || ""),
+                nombre: String(p.nombre || ""),
+                descripcion: String(p.descripcion || ""),
+                tipo_producto: String(p.tipo_producto || ""),
+                id_categoria: String(p.id_categoria || ""),
+                marca: String(p.marca || ""),
+                ubicacion: String(p.ubicacion || ""),
+                costo_monto: String(p.costo_monto || ""),
+                precio_monto: String(p.precio_monto || ""),
+                margen_ganancia: String(p.margen_ganancia || ""),
+                stock: String(p.stock ?? "0"),
+                stock_minimo: String(p.stock_minimo ?? "0"),
+                id_costo_moneda: String(p.id_costo_moneda || "2"),
+                id_precio_moneda: String(p.id_precio_moneda || "2"),
+                id_proveedor: "" // Se cargará asíncronamente
+            });
+
+            // Cargar el proveedor (tabla relacional)
+            const fetchExtraDetails = async () => {
+                try {
+                    const { data } = await supabase
+                        .from('Detalle_Productos')
+                        .select('id_proveedor')
+                        .eq('id_producto', p.id)
+                        .maybeSingle();
+                    
+                    if (data?.id_proveedor) {
+                        setNewProduct(prev => ({ ...prev, id_proveedor: String(data.id_proveedor) }));
+                    }
+                } catch (error) {
+                    console.error("Error cargando proveedor:", error );
+                }
+            };
+            fetchExtraDetails();
+        }
+    }, [location.state]);
 
     // ============================================================================
     // 4. MANEJADORES DE EVENTOS (HANDLERS)
     // ============================================================================
 
     /**
-     * Valida un campo específico usando las reglas definidas.
+     * Validación individual de campo.
      */
     const validateField = (fieldName: string, value: string): string => {
         if (validationRules[fieldName]) return validationRules[fieldName](value);
@@ -170,8 +218,7 @@ export function Products() {
     };
 
     /**
-     * Valida y actualiza el estado del formulario cuando el usuario escribe.
-     * Limpia el error del campo específico si la validación pasa.
+     * Manejo de cambios en inputs de texto/número.
      */
     const handleInputChange = (fieldName: string, value: string) => {
         setNewProduct({ ...newProduct, [fieldName]: value });
@@ -179,7 +226,7 @@ export function Products() {
     };
 
     /**
-     * Procesa la carga de imágenes: genera preview y valida el archivo.
+     * Manejo de selección de nueva imagen.
      */
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -193,7 +240,7 @@ export function Products() {
     };
 
     /**
-     * Elimina la imagen seleccionada y limpia el input file.
+     * Eliminación de imagen (limpiar preview y archivo).
      */
     const handleRemoveImage = () => {
         setImagePreview(null);
@@ -203,23 +250,22 @@ export function Products() {
     };
 
     // ============================================================================
-    // 5. LÓGICA DE INSERCIÓN (CORE SUBMISSION LOGIC)
+    // 5. LÓGICA DE EDICIÓN Y ACTUALIZACIÓN (CORE UPDATE LOGIC)
     // ============================================================================
 
     /**
-     * PROCESO DE GUARDADO:
-     * 1. Valida todos los campos del formulario.
-     * 2. Verifica si hay imagen (obligatoria).
-     * 3. Sube la imagen a Supabase Storage.
-     * 4. Inserta el producto en la tabla 'Productos'.
-     * 5. Crea la relación en 'Detalle_Productos'.
-     * 6. Maneja errores (incluyendo duplicados).
+     * PROCESO DE ACTUALIZACIÓN (O INSERCIÓN):
+     * 1. Valida campos.
+     * 2. Verifica imagen (si no hay nueva, usa la existente o pide una si es nuevo).
+     * 3. Sube nueva imagen si se seleccionó una.
+     * 4. UPDATE si existe 'editingId': Actualiza Productos y upsert en Detalle_Productos.
+     * 5. INSERT si no existe 'editingId' (Fallback).
      */
     const handleSubmit = async (e: any) => {
         e.preventDefault();
         setIsLoading(true);
 
-        // A. Validación Completa del Formulario
+        // A. Validación
         const newErrors: { [key: string]: string } = {};
         Object.keys(newProduct).forEach((fieldName) => {
             const value = (newProduct as any)[fieldName];
@@ -227,10 +273,9 @@ export function Products() {
             if (error) newErrors[fieldName] = error;
         });
         
-        // Validación de Imagen (Obligatoria para nuevos productos)
-        if (!imageFile) newErrors['imagen'] = "La imagen del producto es obligatoria";
+        // Validar imagen solo si no hay ni archivo nuevo ni preview existente
+        if (!imageFile && !imagePreview) newErrors['imagen'] = "La imagen del producto es obligatoria";
 
-        // Si hay errores, detener y mostrar feedback
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             setIsLoading(false);
@@ -244,8 +289,8 @@ export function Products() {
         }
 
         try {
-            // B. Subida de Imagen (si aplica)
-            let imageUrl = null;
+            // B. Manejo de Imagen (Update o Keep)
+            let imageUrl = imagePreview; 
             if (imageFile) {
                 const fileName = `${Date.now()}.${imageFile.name.split('.').pop()}`;
                 const { error: uploadError } = await supabase.storage.from('imagenesproductos').upload(fileName, imageFile);
@@ -270,54 +315,89 @@ export function Products() {
                 stock_minimo: parseInt(newProduct.stock_minimo),
                 id_costo_moneda: parseInt(newProduct.id_costo_moneda),
                 id_precio_moneda: parseInt(newProduct.id_precio_moneda),
-                imagen: imageUrl,
-                estado: true
+                imagen: imageUrl
             };
 
             const selectedProviderId = newProduct.id_proveedor ? parseInt(newProduct.id_proveedor) : null;
-            
-            // Insertar Producto
-            const { data: pCreated, error: pError } = await supabase
-                .from('Productos')
-                .insert(cleanData)
-                .select()
-                .single();
 
-            if (pError) throw pError;
+            if (editingId) {
+                // UPDATE en Productos
+                const { error: pError } = await supabase
+                    .from('Productos')
+                    .update(cleanData)
+                    .eq('id', editingId);
 
-            // Insertar Detalle (Relación Proveedor)
-            if (pCreated) {
-                await supabase.from('Detalle_Productos').insert({ 
-                    id_producto: pCreated.id, 
-                    id_proveedor: selectedProviderId 
-                });
+                if (pError) throw pError;
+
+                // Actualizar relación con proveedor (Detalle_Productos)
+                // Actualizar relación con proveedor (Detalle_Productos)
+                // Verificamos si existe una relación previa para este producto
+                const { data: existingRel, error: fetchRelError } = await supabase
+                    .from('Detalle_Productos')
+                    .select('id')
+                    .eq('id_producto', editingId)
+                    .maybeSingle();
+
+                if (fetchRelError) throw fetchRelError;
+
+                if (existingRel) {
+                    // Si existe, actualizamos el proveedor (que puede repetirse en otros productos)
+                    const { error: updateRelError } = await supabase
+                        .from('Detalle_Productos')
+                        .update({ id_proveedor: selectedProviderId })
+                        .eq('id', existingRel.id);
+
+                    if (updateRelError) throw updateRelError;
+                } else if (selectedProviderId) {
+                    // Si no existe y tenemos proveedor seleccionado, insertamos nueva relación
+                    const { error: insertRelError } = await supabase
+                        .from('Detalle_Productos')
+                        .insert({ 
+                            id_producto: editingId, 
+                            id_proveedor: selectedProviderId 
+                        });
+
+                    if (insertRelError) throw insertRelError;
+                }
+
+                navigate('/inventory', { state: { successMessage: 'Producto actualizado exitosamente' } });
+            } else {
+                // ============================
+                // D. CAMINO DE INSERCIÓN (FALLBACK)
+                // ============================
+                const { data: pCreated, error: pError } = await supabase
+                    .from('Productos')
+                    .insert({ ...cleanData, estado: true })
+                    .select()
+                    .single();
                 
-                // D. Redirección Exitosa
-                navigate('/inventory', { state: { successMessage: 'Producto guardado exitosamente' } });
+                if (pError) throw pError;
+                if (pCreated) {
+                    await supabase.from('Detalle_Productos').insert({ 
+                        id_producto: pCreated.id, 
+                        id_proveedor: selectedProviderId 
+                    });
+                    navigate('/inventory', { state: { successMessage: 'Producto guardado exitosamente' } });
+                }
             }
         } catch (error: any) {
             console.error('Error:', error);
-            // Manejo de Error de Duplicado (Postgres code 23505)
+            
             if (error.code === '23505') {
                 const combinedInfo = `${error.message || ''} ${error.details || ''} ${error.detail || ''}`.toLowerCase();
                 
-                let fieldError = { ...errors };
-                let msg = "Ya existe un registro con estos datos únicos.";
-
+                // Solo mostramos error al usuario si es del producto principal
                 if (combinedInfo.includes('codigo_barras')) {
-                    fieldError.codigo_barras = "Este código de barras ya está registrado.";
-                    msg = "El código de barras ya existe en el sistema.";
-                } 
-                setErrors(fieldError);
-                setToastConfig({ 
-                    show: true, 
-                    message: msg,
-                    type: 'error'
-                });
+                    setErrors({ ...errors, codigo_barras: "Este código de barras ya está registrado." });
+                    setToastConfig({ show: true, message: "El código de barras ya existe en el sistema.", type: 'error' });
+                } else if (!combinedInfo.includes('detalle_productos')) {
+                     // Si no es detalle_productos (que ya manejamos arriba), mostramos genérico
+                     setToastConfig({ show: true, message: "Ya existe un registro con estos datos.", type: 'error' });
+                }
             } else {
                 setToastConfig({ 
                     show: true, 
-                    message: 'Hubo un error al intentar guardar el producto.',
+                    message: 'Hubo un error al procesar la solicitud.',
                     type: 'error'
                 });
             }
@@ -332,8 +412,8 @@ export function Products() {
             <div className="min-h-screen bg-gray-50 p-5">
                 {/* Header */}
                 <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-gray-900">Añadir Producto</h1>
-                    <p className="text-gray-500 mt-1">Completa la información del producto para agregarlo a tu inventario.</p>
+                    <h1 className="text-2xl font-bold text-gray-900">Editar Producto</h1>
+                    <p className="text-gray-500 mt-1">Modifica la información del producto seleccionado.</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -668,7 +748,7 @@ export function Products() {
                             disabled={isLoading}
                             className={`px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-colors ${isLoading ? 'opacity-50' : ''}`}
                         >
-                            {isLoading ? 'Guardando...' : 'Guardar Producto'}
+                            {isLoading ? 'Guardando...' : (editingId ? 'Actualizar Producto' : 'Guardar Producto')}
                         </button>
                     </div>
                 </form>

@@ -7,6 +7,8 @@ import { Inventory } from './pages/inventory';
 import { Categorias } from './pages/categories';
 import { Providers } from './pages/providers';
 import { AddProviders } from './pages/addproviders';
+import { EditProducts } from './pages/editproducts';
+import { EditProviders } from './pages/editproviders';
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
         <Route path="/categories" element={<Categorias />} />
         <Route path="/providers" element={<Providers />} />
         <Route path="/addproviders" element={<AddProviders />} />
+        <Route path="/editproducts" element={<EditProducts />} />
+        <Route path="/editproviders" element={<EditProviders />} />
       </Routes>
     </BrowserRouter>
   )

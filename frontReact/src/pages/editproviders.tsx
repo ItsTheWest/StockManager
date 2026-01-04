@@ -1,13 +1,16 @@
-
 import { Menu } from "../components/menu";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../supabase-client";
 import { Message } from "../components/message";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
-export function AddProviders() {
-    // --- 1. CONSTANTES Y ESTADOS ---
+export function EditProviders() {
+    // ============================================================================
+    // 1. ESTADOS E INICIALIZACIÓN (STATES & INIT)
+    // ============================================================================
     const navigate = useNavigate();
+    const location = useLocation();
+    const [editingId, setEditingId] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [toastConfig, setToastConfig] = useState<{ show: boolean, message: string, type: 'success' | 'error' }>({ 
         show: false, 
@@ -29,7 +32,44 @@ export function AddProviders() {
         nombre_contacto: "",
     });
 
-    // --- 2. REGLAS DE VALIDACIÓN CENTRALIZADAS ---
+    // ============================================================================
+    // 2. CARGA DE DATOS (DATA FETCHING & PRE-FILLING)
+    // ============================================================================
+    useEffect(() => {
+        if (location.state?.provider) {
+            const p = location.state.provider;
+            setEditingId(p.id);
+            
+            // Procesar RIF (Ejemplo: J-12345678)
+            if (p.rif && p.rif.includes('-')) {
+                const [letter, number] = p.rif.split('-');
+                setRifLetter(letter);
+                setRifNumber(number);
+            } else {
+                setRifNumber(p.rif || "");
+            }
+
+            // Procesar Teléfono (Ejemplo: 0414-1234567)
+            if (p.telefono && p.telefono.includes('-')) {
+                const [code, num] = p.telefono.split('-');
+                setAreaCode(code);
+                setPhoneNum(num);
+            } else {
+                setPhoneNum(p.telefono || "");
+            }
+
+            setNewProvider({
+                nombre: p.nombre || "",
+                ubicacion: p.ubicacion || "",
+                correo: p.correo || "",
+                nombre_contacto: p.nombre_contacto || "",
+            });
+        }
+    }, [location]);
+
+    // ============================================================================
+    // 3. REGLAS DE NEGOCIO Y VALIDACIÓN (BUSINESS LOGIC)
+    // ============================================================================
     const validationRules: { [key: string]: (value: string) => string } = {
         nombre: (value) => {
             if (!value.trim()) return "El nombre es obligatorio";
@@ -63,7 +103,9 @@ export function AddProviders() {
         }
     };
 
-    // --- 3. FUNCIONES DE MANEJO DE FORMULARIO ---
+    // ============================================================================
+    // 4. MANEJADORES DE EVENTOS (HANDLERS)
+    // ============================================================================
     const validateField = (fieldName: string, value: string): string => {
         if (validationRules[fieldName]) return validationRules[fieldName](value);
         return "";
@@ -74,6 +116,9 @@ export function AddProviders() {
         if (errors[fieldName]) setErrors({ ...errors, [fieldName]: "" });
     };
 
+    // ============================================================================
+    // 5. LÓGICA DE ACTUALIZACIÓN (CORE UPDATE LOGIC)
+    // ============================================================================
     const handleSubmit = async (e: any) => {
         e.preventDefault();
         setIsLoading(true);
@@ -98,54 +143,57 @@ export function AddProviders() {
             setErrors(newErrors);
             setIsLoading(false);
             window.scrollTo(0, 0);
+            setToastConfig({ 
+                show: true, 
+                message: "Algunos campos son incorrectos",
+                type: 'error'
+            });
             return;
         }
 
         try {
             const fullRif = `${rifLetter}-${rifNumber}`;
             const fullPhone = `${areaCode}-${phoneNum}`;
-            const { error } = await supabase.from('Proveedores').insert({
-                ...newProvider,
-                rif: fullRif,
-                telefono: fullPhone,
-                estado: true
-            });
-
-            if (error) throw error;
             
-            navigate('/providers', { state: { successMessage: 'Proveedor registrado con éxito' } });
+            if (editingId) {
+                const { error } = await supabase
+                    .from('Proveedores')
+                    .update({
+                        ...newProvider,
+                        rif: fullRif,
+                        telefono: fullPhone
+                    })
+                    .eq('id', editingId);
+
+                if (error) throw error;
+                
+                navigate('/providers', { state: { successMessage: 'Proveedor actualizado con éxito' } });
+            }
         } catch (error: any) {
             console.error('Error:', error);
             
-            // Error 23505 es el código de Postgres para "Unique Violation" (Duplicado)
             if (error.code === '23505') {
-                // Unificamos toda la información del error para buscar coincidencias
                 const combinedInfo = `${error.message || ''} ${error.details || ''} ${error.detail || ''}`.toLowerCase();
-                
                 let fieldError = { ...errors };
-                let msg = "Ya existe un registro con estos datos únicos.";
+                let msg = "Ya existe un registro con estos datos.";
 
                 if (combinedInfo.includes('rif')) {
-                    fieldError.rif = "Este RIF ya está registrado.";
+                    fieldError.rif = "Este RIF ya está registrado por otro proveedor.";
                     msg = "El RIF ya existe en el sistema.";
                 } else if (combinedInfo.includes('telefono')) {
-                    fieldError.telefono = "Este teléfono ya está registrado.";
+                    fieldError.telefono = "Este teléfono ya está registrado por otro proveedor.";
                     msg = "El número de teléfono ya existe.";
                 } else if (combinedInfo.includes('correo') || combinedInfo.includes('email')) {
-                    fieldError.correo = "Este correo ya está registrado.";
+                    fieldError.correo = "Este correo ya está registrado por otro proveedor.";
                     msg = "El correo electrónico ya existe.";
                 }
 
                 setErrors(fieldError);
-                setToastConfig({ 
-                    show: true, 
-                    message: msg,
-                    type: 'error'
-                });
+                setToastConfig({ show: true, message: msg, type: 'error' });
             } else {
                 setToastConfig({ 
                     show: true, 
-                    message: 'Hubo un error al intentar guardar el proveedor.',
+                    message: 'Hubo un error al intentar actualizar el proveedor.',
                     type: 'error'
                 });
             }
@@ -160,25 +208,21 @@ export function AddProviders() {
             <div className="min-h-screen bg-gray-50 p-5">
                 {/* Header */}
                 <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-gray-900">Añadir Proveedor</h1>
-                    <p className="text-gray-500 mt-1">Completa la información del proveedor para registrarlo en el sistema.</p>
+                    <h1 className="text-2xl font-bold text-gray-900">Editar Proveedor</h1>
+                    <p className="text-gray-500 mt-1">Modifica la información del proveedor seleccionado.</p>
                 </div>
 
                 <form onSubmit={handleSubmit} noValidate className="space-y-6">
                     {/* Form Container: Información de la Empresa */}
                     <div className="bg-white border rounded-xl shadow-sm border-gray-200">
-                        {/* Section Title */}
                         <div className="border-b border-gray-200 px-6 py-4">
                             <h2 className="text-lg font-semibold text-gray-900">Información de la Empresa</h2>
                         </div>
 
-                        {/* Content */}
                         <div className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div>
-                                    <label htmlFor="rif" className="block text-base font-medium text-gray-700 mb-2">
-                                        RIF
-                                    </label>
+                                    <label htmlFor="rif" className="block text-base font-medium text-gray-700 mb-2">RIF</label>
                                     <div className="flex">
                                         <select
                                             value={rifLetter}
@@ -200,7 +244,7 @@ export function AddProviders() {
                                             }}
                                             type="text"
                                             id="rif"
-                                            placeholder={errors.rif || "Ingrese los números del RIF"}
+                                            placeholder={errors.rif || "Números del RIF"}
                                             className={`w-full px-4 py-2.5 border rounded-r-lg focus:ring-2 outline-none transition-all ${
                                                 errors.rif ? 'border-red-500 placeholder-red-500 ring-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                                             }`}
@@ -210,15 +254,13 @@ export function AddProviders() {
                                 </div>
 
                                 <div>
-                                    <label htmlFor="nombre" className="block text-base font-medium text-gray-700 mb-2">
-                                        Nombre de la Empresa
-                                    </label>
+                                    <label htmlFor="nombre" className="block text-base font-medium text-gray-700 mb-2">Nombre de la Empresa</label>
                                     <input
                                         value={newProvider.nombre}
                                         onChange={(e) => handleInputChange('nombre', e.target.value)}
                                         type="text"
                                         id="nombre"
-                                        placeholder={errors.nombre || "Ingrese el nombre de la empresa"}
+                                        placeholder={errors.nombre || "Nombre de la empresa"}
                                         className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 outline-none transition-all ${
                                             errors.nombre ? 'border-red-500 placeholder-red-500 ring-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                                         }`}
@@ -229,15 +271,13 @@ export function AddProviders() {
 
                             <div className="grid grid-cols-1 gap-6 mb-6">
                                 <div>
-                                    <label htmlFor="ubicacion" className="block text-base font-medium text-gray-700 mb-2">
-                                        Ubicación
-                                    </label>
+                                    <label htmlFor="ubicacion" className="block text-base font-medium text-gray-700 mb-2">Ubicación</label>
                                     <input
                                         value={newProvider.ubicacion}
                                         onChange={(e) => handleInputChange('ubicacion', e.target.value)}
                                         type="text"
                                         id="ubicacion"
-                                        placeholder={errors.ubicacion || "Ingrese la ubicación de la empresa"}
+                                        placeholder={errors.ubicacion || "Ubicación de la empresa"}
                                         className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 outline-none transition-all ${
                                             errors.ubicacion ? 'border-red-500 placeholder-red-500 ring-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                                         }`}
@@ -250,24 +290,20 @@ export function AddProviders() {
 
                     {/* Form Container: Información de Contacto */}
                     <div className="bg-white border rounded-xl shadow-sm border-gray-200">
-                        {/* Section Title */}
                         <div className="border-b border-gray-200 px-6 py-4">
                             <h2 className="text-lg font-semibold text-gray-900">Información de Contacto</h2>
                         </div>
 
-                        {/* Content */}
                         <div className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div>
-                                    <label htmlFor="nombre_contacto" className="block text-base font-medium text-gray-700 mb-2">
-                                        Nombre del Contacto
-                                    </label>
+                                    <label htmlFor="nombre_contacto" className="block text-base font-medium text-gray-700 mb-2">Nombre del Contacto</label>
                                     <input
                                         value={newProvider.nombre_contacto}
                                         onChange={(e) => handleInputChange('nombre_contacto', e.target.value)}
                                         type="text"
                                         id="nombre_contacto"
-                                        placeholder={errors.nombre_contacto || "Ingrese el nombre de la persona de contacto"}
+                                        placeholder={errors.nombre_contacto || "Persona de contacto"}
                                         className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 outline-none transition-all ${
                                             errors.nombre_contacto ? 'border-red-500 placeholder-red-500 ring-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                                         }`}
@@ -276,9 +312,7 @@ export function AddProviders() {
                                 </div>
 
                                 <div>
-                                    <label htmlFor="telefono" className="block text-base font-medium text-gray-700 mb-2">
-                                        Teléfono
-                                    </label>
+                                    <label htmlFor="telefono" className="block text-base font-medium text-gray-700 mb-2">Teléfono</label>
                                     <div className="flex">
                                         <select
                                             value={areaCode}
@@ -317,15 +351,13 @@ export function AddProviders() {
 
                             <div className="grid grid-cols-1 gap-6 mb-6">
                                 <div>
-                                    <label htmlFor="correo" className="block text-base font-medium text-gray-700 mb-2">
-                                        Correo Electrónico
-                                    </label>
+                                    <label htmlFor="correo" className="block text-base font-medium text-gray-700 mb-2">Correo Electrónico</label>
                                     <input
                                         value={newProvider.correo}
                                         onChange={(e) => handleInputChange('correo', e.target.value)}
                                         type="text"
                                         id="correo"
-                                        placeholder={errors.correo || "Ingrese el correo electrónico"}
+                                        placeholder={errors.correo || "Correo electrónico"}
                                         className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 outline-none transition-all ${
                                             errors.correo ? 'border-red-500 placeholder-red-500 ring-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                                         }`}
@@ -351,7 +383,7 @@ export function AddProviders() {
                             disabled={isLoading}
                             className={`px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-colors ${isLoading ? 'opacity-50' : ''}`}
                         >
-                            {isLoading ? 'Guardando...' : 'Guardar Proveedor'}
+                            {isLoading ? 'Guardando...' : 'Actualizar Proveedor'}
                         </button>
                     </div>
                 </form>

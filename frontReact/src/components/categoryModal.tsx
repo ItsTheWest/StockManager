@@ -6,9 +6,10 @@ interface CategoryModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    category?: { id: number; nombre: string; descripcion: string } | null;
 }
 
-export function CategoryModal({ isOpen, onClose, onSuccess }: CategoryModalProps) {
+export function CategoryModal({ isOpen, onClose, onSuccess, category }: CategoryModalProps) {
     const [newCategory, setNewCategory] = useState({
         nombre: "",
         descripcion: "",
@@ -21,6 +22,15 @@ export function CategoryModal({ isOpen, onClose, onSuccess }: CategoryModalProps
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
+            // Si hay una categoría para editar, cargar sus datos
+            if (category) {
+                setNewCategory({
+                    nombre: category.nombre || "",
+                    descripcion: category.descripcion || "",
+                });
+            } else {
+                setNewCategory({ nombre: "", descripcion: "" });
+            }
         } else {
             document.body.style.overflow = 'unset';
             // Resetear el estado al cerrar
@@ -30,7 +40,7 @@ export function CategoryModal({ isOpen, onClose, onSuccess }: CategoryModalProps
         return () => {
             document.body.style.overflow = 'unset';
         };
-    }, [isOpen]);
+    }, [isOpen, category]);
 
     // Cerrar el modal al hacer clic fuera de él
     useEffect(() => {
@@ -53,25 +63,33 @@ export function CategoryModal({ isOpen, onClose, onSuccess }: CategoryModalProps
         setErrors({});
 
         try {
-            const { error } = await supabase
-                .from('Categorias')
-                .insert({ ...newCategory, estado: true });
-            
-            if (error) {
-                if (error.code === '23505') {
-                    setErrors({ nombre: "Esta categoría ya existe" });
-                } else {
-                    console.error('Error al agregar la categoría:', error);
-                    alert("Error al agregar la categoría");
-                }
+            if (category?.id) {
+                // Modo Edición
+                const { error } = await supabase
+                    .from('Categorias')
+                    .update({ ...newCategory })
+                    .eq('id', category.id);
+
+                if (error) throw error;
             } else {
-                setNewCategory({ nombre: "", descripcion: "" });
-                onSuccess();
-                onClose();
+                // Modo Creación
+                const { error } = await supabase
+                    .from('Categorias')
+                    .insert({ ...newCategory, estado: true });
+                
+                if (error) throw error;
             }
-        } catch (error) {
-            console.error('Error en la petición:', error);
-            alert("Error de conexión");
+
+            setNewCategory({ nombre: "", descripcion: "" });
+            onSuccess();
+            onClose();
+        } catch (error: any) {
+            console.error('Error en la operación:', error);
+            if (error.code === '23505') {
+                setErrors({ nombre: "Esta categoría ya existe" });
+            } else {
+                alert("Ocurrió un error al procesar la categoría");
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -90,7 +108,9 @@ export function CategoryModal({ isOpen, onClose, onSuccess }: CategoryModalProps
             >
                 {/* Modal Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <h2 className="text-xl font-bold text-gray-900">Agregar Nueva Categoría</h2>
+                    <h2 className="text-xl font-bold text-gray-900">
+                        {category ? 'Editar Categoría' : 'Agregar Nueva Categoría'}
+                    </h2>
                     <button
                         onClick={onClose}
                         className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full"
@@ -161,7 +181,7 @@ export function CategoryModal({ isOpen, onClose, onSuccess }: CategoryModalProps
                             disabled={isSubmitting}
                             className={`px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow-sm transition-colors ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
                         >
-                            {isSubmitting ? 'Guardando...' : 'Guardar Categoría'}
+                            {isSubmitting ? 'Guardando...' : category ? 'Actualizar Categoría' : 'Guardar Categoría'}
                         </button>
                     </div>
                 </form>

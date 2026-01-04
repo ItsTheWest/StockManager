@@ -7,19 +7,25 @@ import { Message } from "../components/message";
 import { DeleteModal } from "../components/deleteModal";
 
 export function Inventory() {
-    // --- 1. ESTADO Y OBTENCIÓN DE DATOS ---
-    const [products, setProducts] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    // ============================================================================
+    // 1. ESTADOS Y OBTENCIÓN DE DATOS (STATE & DATA FETCHING)
+    // ============================================================================
+    
+    // Estados principales
+    const [products, setProducts] = useState<any[]>([]); // Almacena la lista completa de productos
+    const [isLoading, setIsLoading] = useState(true); // Controla el spinner de carga
 
-    // Función para obtener productos desde Supabase
+    /**
+     * Obtiene todos los productos activos desde Supabase.
+     * Incluye la relación con Categorías para mostrar el nombre.
+     */
     const getProducts = async () => {
         setIsLoading(true);
         try {
             const { error, data } = await supabase
                 .from('Productos')
-                // Seleccionamos todos los campos de productos y el nombre de la categoria relacionada
-                .select('*, Categorias(nombre)')
-                .eq('estado', true) // Solo mostrar productos activos
+                .select('*, Categorias(nombre)') // Join con Categorias
+                .eq('estado', true) // Solo activos
                 .order('nombre', { ascending: true });
                 
             if (error) {
@@ -36,15 +42,20 @@ export function Inventory() {
         }
     };
 
+    // Carga inicial
     useEffect(() => {
         getProducts();
     }, []);
 
-    // --- 2. LÓGICA DEL MENÚ DE ACCIONES (TRES PUNTOS) ---
+    // ============================================================================
+    // 2. LÓGICA DE INTERFAZ DE USUARIO (UI LOGIC)
+    // ============================================================================
+    
+    // --- A. Menú de Acciones (Tres Puntos) ---
     const [openActionMenuId, setOpenActionMenuId] = useState<number | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
-    // Cerrar el menú al hacer clic fuera de él
+    // Cierra el menú si se hace click fuera de él
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -66,35 +77,42 @@ export function Inventory() {
         }
     };
 
-    // --- 3. LÓGICA DE ELIMINACIÓN (MODAL Y TOAST) ---
+    // --- B. Feedback y Confirmaciones (Modales/Toasts) ---
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [productToDelete, setProductToDelete] = useState<number | null>(null);
     const [toastConfig, setToastConfig] = useState<{ show: boolean, message: string, type?: 'success' | 'error' }>({ show: false, message: '' });
 
     const location = useLocation();
 
+    // Muestra mensaje de éxito si viene de redirección (Add/Edit)
     useEffect(() => {
         if (location.state?.successMessage) {
             setToastConfig({ show: true, message: location.state.successMessage, type: 'success' });
-            // Limpiar el estado para que no se muestre de nuevo al recargar (opcional, pero recomendado)
             window.history.replaceState({}, document.title);
         }
     }, [location]);
 
-    // Se ejecuta al hacer clic en borrar en la tabla
+    // ============================================================================
+    // 3. LÓGICA DE ELIMINACIÓN (DELETE LOGIC)
+    // ============================================================================
+
+    /**
+     * Prepara la eliminación: abre modal y guarda ID.
+     */
     const handleDeleteClick = (id: number, e: React.MouseEvent) => {
         e.stopPropagation(); 
-        setProductToDelete(id);      // Guardamos el ID temporalmente
-        setIsDeleteModalOpen(true);  // Abrimos el modal
-        setOpenActionMenuId(null);   // Cerramos el menú de tres puntos
+        setProductToDelete(id);
+        setIsDeleteModalOpen(true);
+        setOpenActionMenuId(null);
     };
 
-    // Se ejecuta al confirmar el borrado en el modal
+    /**
+     * Ejecuta el Soft Delete (cambio de estado a false).
+     */
     const confirmDelete = async () => {
         if (!productToDelete) return;
 
         try {
-            // Soft delete: cambiar estado a false
             const { error } = await supabase
                 .from('Productos')
                 .update({ estado: false })
@@ -103,7 +121,7 @@ export function Inventory() {
             if (error) {
                 console.error('Error al eliminar:', error);
             } else {
-                setProducts(products.filter(p => p.id !== productToDelete));
+                setProducts(products.filter(p => p.id !== productToDelete)); // Actualización optimista local
                 setToastConfig({ show: true, message: 'Producto eliminado correctamente' });
             }
         } catch (err) {
@@ -119,9 +137,14 @@ export function Inventory() {
         setProductToDelete(null);
     };
 
-    // --- 4. LÓGICA DE BÚSQUEDA ---
+    // ============================================================================
+    // 4. FILTRADO Y PAGINACIÓN (FILTERING & PAGINATION)
+    // ============================================================================
+
+    // --- Búsqueda ---
     const [searchTerm, setSearchTerm] = useState("");
 
+    // Filtra productos por nombre, categoría o marca
     const filteredProducts = products.filter((product) => {
         const query = searchTerm.toLowerCase();
         return (
@@ -131,7 +154,7 @@ export function Inventory() {
         );
     });
 
-    // --- 5. LÓGICA DE PAGINACIÓN ---
+    // --- Paginación ---
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
 
@@ -143,12 +166,16 @@ export function Inventory() {
 
     const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-    // Resetear a la página 1 cuando se realiza una nueva búsqueda
+    // Resetea a página 1 si cambia la búsqueda
     useEffect(() => {
         setCurrentPage(1);
     }, [searchTerm]);
 
-    // --- 6. CONSTANTES DE DISEÑO (PARA MANTENER ESTRUCTURA) ---
+    // ============================================================================
+    // 5. CONSTANTES DE DISEÑO (DESIGN CONSTANTS)
+    // ============================================================================
+    // Variables para mantener la consistencia visual de la tabla (altura fija).
+
     const ROW_HEIGHT = 81; 
     const MIN_ROWS = 5;
     const TABLE_MIN_HEIGHT = `${ROW_HEIGHT * MIN_ROWS}px`;
@@ -309,15 +336,17 @@ export function Inventory() {
                                                                     </svg>
                                                                     Ver detalles
                                                                 </button>
-                                                                <button
+                                                                <Link 
+                                                                    to={`/editproducts`} 
+                                                                    state={{ product }}
                                                                     className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2"
-                                                                    onClick={(e) => { e.stopPropagation(); setOpenActionMenuId(null); }}
+                                                                    onClick={() => setOpenActionMenuId(null)}
                                                                 >
                                                                     <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                                                     </svg>
                                                                     Editar
-                                                                </button>
+                                                                </Link>
                                                                 <button
                                                                     className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
                                                                     onClick={(e) => handleDeleteClick(product.id, e)}
