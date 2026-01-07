@@ -9,6 +9,7 @@ import { Providers } from './pages/providers';
 import { AddProviders } from './pages/addproviders';
 import { EditProducts } from './pages/editproducts';
 import { EditProviders } from './pages/editproviders';
+import { Notifications } from './pages/notifications';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/addproviders" element={<AddProviders />} />
         <Route path="/editproducts" element={<EditProducts />} />
         <Route path="/editproviders" element={<EditProviders />} />
+        <Route path="/notifications" element={<Notifications />} />
       </Routes>
     </BrowserRouter>
   )

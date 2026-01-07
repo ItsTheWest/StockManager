@@ -226,8 +226,8 @@ export function Menu({ children }: MenuProps) {
 
                         {/* Inbox */}
                         <li>
-                            <a
-                                href="#"
+                            <Link
+                                to="/notifications"
                                 className="flex items-center p-2 text-gray-800 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-200 group"
                             >
                                 <svg className="w-7 h-7 text-gray-500 transition duration-75 group-hover:text-gray-300 dark:group-hover:text-blue-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
@@ -237,7 +237,7 @@ export function Menu({ children }: MenuProps) {
                                 <span className="inline-flex items-center justify-center w-3 h-3 p-3 ms-3 text-sm font-medium text-red-800 bg-red-100 rounded-full dark:bg-red-200 dark:text-red-500">
                                     2
                                 </span>
-                            </a>
+                            </Link>
                         </li>
                         {/* Users */}
 
