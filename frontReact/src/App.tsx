@@ -10,6 +10,9 @@ import { AddProviders } from './pages/addproviders';
 import { EditProducts } from './pages/editproducts';
 import { EditProviders } from './pages/editproviders';
 import { Notifications } from './pages/notifications';
+import { Billing } from './pages/billing';
+import { Chatbot } from './pages/chatbot';
+import { Estadistics } from './pages/estadistics';
 
 function App() {
   return (
@@ -26,6 +29,9 @@ function App() {
         <Route path="/editproducts" element={<EditProducts />} />
         <Route path="/editproviders" element={<EditProviders />} />
         <Route path="/notifications" element={<Notifications />} />
+        <Route path="/billing" element={<Billing />} />
+        <Route path="/chatbot" element={<Chatbot />} />
+        <Route path="/estadistics" element={<Estadistics />} />
       </Routes>
     </BrowserRouter>
   )

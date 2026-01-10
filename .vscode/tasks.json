@@ -13,6 +13,19 @@
             },
             "problemMatcher": [],
             "detail": "Ejecuta npm run dep en el directorio frontReact al abrir el proyecto."
+        },
+        {
+            "label": "Ejecutar servidor Django",
+            "type": "shell",
+            "command": ".\\venv\\Scripts\\Activate.ps1; python manage.py runserver",
+            "options": {
+                "cwd": "${workspaceFolder}/backDjango"
+            },
+            "runOptions": {
+                "runOn": "folderOpen"
+            },
+            "problemMatcher": [],
+            "detail": "Activa el entorno virtual y ejecuta el servidor de desarrollo de Django al abrir el proyecto."
         }
     ]
 }

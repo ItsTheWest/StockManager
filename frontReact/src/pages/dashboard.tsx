@@ -8,14 +8,14 @@ export function Dashboard() {
     useEffect(() => {
         // Llamada a tu API de Django
         fetch('http://127.0.0.1:8000/services/dolar-bcv/') //fetch realiza la peticion http y devuelve una promesa
-        .then(response => response.json()) //then permite manejar la respuesta de manera asincrona  para que response.json() convierta la respuesta a json
-        .then(data => { // este segundo then maneja la respuesta convertida a json
-            if (data.process) { 
-            setDolarPrice(data.value);
-            }
-        })
-        .catch(error => console.error("Error cargando dolar:", error)) //catch maneja el error
-        .finally(() => setLoading(false)); //finally se ejecuta al finalizar la peticion y hace que loading sea false
+            .then(response => response.json()) //then permite manejar la respuesta de manera asincrona  para que response.json() convierta la respuesta a json
+            .then(data => { // este segundo then maneja la respuesta convertida a json
+                if (data.process) {
+                    setDolarPrice(data.value);
+                }
+            })
+            .catch(error => console.error("Error cargando dolar:", error)) //catch maneja el error
+            .finally(() => setLoading(false)); //finally se ejecuta al finalizar la peticion y hace que loading sea false
     }, []); //el array vacio indica que solo se ejecuta una vez porque no hay dependencias
     // -----------------------------------------------------------------------
     // 1. DATOS DE LA GRÁFICA
@@ -92,7 +92,7 @@ export function Dashboard() {
                                     <span className="text-gray-400">Cargando...</span>
                                 ) : (
                                     <span className="text-2xl font-bold text-gray-900 mb-1">
-                                    Bs. {dolarPrice?.toFixed(2)}
+                                        Bs. {dolarPrice?.toFixed(2)}
                                     </span>
                                 )}
                                 <div className="flex items-center gap-2">
