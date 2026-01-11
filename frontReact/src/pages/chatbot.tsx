@@ -10,7 +10,11 @@ export function Chatbot() {
                 "Crear estado de advertencia en formularios",
                 "Sugerir paleta de colores corporativa",
                 "Revisar componentes de UI",
-                "Escribir documentación de API"
+                "Escribir documentación de API",
+                "Optimizar rendimiento del frontend",
+                "Implementar autenticación con JWT",
+                "Diseñar wireframes para nueva sección",
+                "Corregir bug en el módulo de pagos"
             ]
         },
         {
@@ -19,17 +23,84 @@ export function Chatbot() {
                 "Mejorar acceso login de página",
                 "Crear estado de advertencia",
                 "Optimizar consultas SQL complejas",
-                "Revisar logs del servidor de producción"
+                "Revisar logs del servidor de producción",
+                "Actualizar dependencias del proyecto",
+                "Configurar variables de entorno",
+                "Implementar validación de formularios",
+                "Refactorizar código legacy",
+                "Crear componentes reutilizables",
+                "Migrar base de datos a PostgreSQL"
             ]
         },
         {
-            title: "DÍAS ANTERIORES",
+            title: "ESTA SEMANA",
             items: [
                 "Planificación de sprint mensual",
                 "Diseño de arquitectura de microservicios",
                 "Configuración de pipeline CI/CD",
                 "Investigación de nuevas librerías UI",
-                "Reunión de feedback con stakeholders"
+                "Reunión de feedback con stakeholders",
+                "Implementar sistema de notificaciones",
+                "Optimizar tiempo de carga de imágenes",
+                "Crear dashboard de analytics",
+                "Integración con API de terceros",
+                "Configurar sistema de caché Redis",
+                "Desarrollar módulo de reportes",
+                "Implementar búsqueda avanzada"
+            ]
+        },
+        {
+            title: "SEMANA PASADA",
+            items: [
+                "Migración de servidor a AWS",
+                "Implementar sistema de roles y permisos",
+                "Optimizar consultas de base de datos",
+                "Crear componente de calendario",
+                "Integrar pasarela de pagos Stripe",
+                "Desarrollar API REST para mobile",
+                "Configurar monitoreo con Datadog",
+                "Implementar sistema de logs centralizado",
+                "Crear tests unitarios para componentes",
+                "Optimizar bundle size de JavaScript",
+                "Implementar lazy loading de imágenes",
+                "Configurar HTTPS y certificados SSL"
+            ]
+        },
+        {
+            title: "HACE DOS SEMANAS",
+            items: [
+                "Rediseño completo de la interfaz de usuario",
+                "Implementar modo oscuro en toda la app",
+                "Crear sistema de comentarios",
+                "Desarrollar módulo de chat en tiempo real",
+                "Integración con WebSockets",
+                "Optimizar SEO de todas las páginas",
+                "Implementar PWA con service workers",
+                "Crear sistema de notificaciones push",
+                "Desarrollar API GraphQL",
+                "Migrar de JavaScript a TypeScript",
+                "Implementar internacionalización (i18n)",
+                "Crear documentación técnica completa"
+            ]
+        },
+        {
+            title: "ESTE MES",
+            items: [
+                "Planificación de roadmap Q1 2026",
+                "Análisis de métricas de usuarios",
+                "Implementar A/B testing",
+                "Optimizar conversión del funnel",
+                "Crear landing pages para campañas",
+                "Desarrollar módulo de exportación de datos",
+                "Implementar sistema de backup automático",
+                "Configurar CDN para assets estáticos",
+                "Crear herramienta de debugging interno",
+                "Implementar rate limiting en API",
+                "Desarrollar sistema de auditoría",
+                "Optimizar queries N+1 en ORM",
+                "Crear dashboard para administradores",
+                "Implementar autenticación de dos factores",
+                "Desarrollar API de webhooks"
             ]
         }
     ];
@@ -61,6 +132,38 @@ export function Chatbot() {
         },
         {
             role: 'user',
+            content: "Me encanta, gracias. ¿Puedes ayudarme con un ejemplo de arquitectura de microservicios?"
+        },
+        {
+            role: 'bot',
+            content: "Por supuesto. Una arquitectura de microservicios moderna típicamente incluye:\n\n1. **API Gateway**: Punto de entrada único para todas las solicitudes de clientes\n2. **Service Discovery**: Registro dinámico de servicios disponibles\n3. **Load Balancer**: Distribución de carga entre instancias\n4. **Message Broker**: Comunicación asíncrona entre servicios (RabbitMQ, Kafka)\n5. **Container Orchestration**: Gestión de contenedores (Kubernetes, Docker Swarm)\n\nCada microservicio debe ser:\n- Independientemente desplegable\n- Altamente cohesivo y débilmente acoplado\n- Responsable de su propia base de datos\n- Capaz de escalar horizontalmente"
+        },
+        {
+            role: 'user',
+            content: "Perfecto. ¿Y qué patrones de diseño recomiendas para el backend?"
+        },
+        {
+            role: 'bot',
+            content: "Para un backend robusto y mantenible, te recomiendo estos patrones:\n\n**Patrones Arquitectónicos:**\n- Repository Pattern: Abstracción de la capa de datos\n- Service Layer Pattern: Lógica de negocio separada\n- Factory Pattern: Creación de objetos complejos\n- Strategy Pattern: Algoritmos intercambiables\n- Observer Pattern: Notificaciones de eventos\n\n**Principios SOLID:**\n- Single Responsibility\n- Open/Closed\n- Liskov Substitution\n- Interface Segregation\n- Dependency Inversion\n\nEstos patrones te ayudarán a crear un código más limpio, testeable y escalable."
+        },
+        {
+            role: 'user',
+            content: "Excelente información. ¿Tienes algún consejo sobre optimización de bases de datos?"
+        },
+        {
+            role: 'bot',
+            content: "¡Claro! Aquí van algunos consejos clave para optimizar bases de datos:\n\n**Indexación:**\n- Crea índices en columnas frecuentemente consultadas\n- Usa índices compuestos para queries con múltiples condiciones\n- Evita índices en columnas con baja cardinalidad\n\n**Queries:**\n- Evita SELECT * y especifica solo las columnas necesarias\n- Usa EXPLAIN para analizar planes de ejecución\n- Implementa paginación para grandes resultados\n- Minimiza subconsultas anidadas\n\n**Caché:**\n- Implementa Redis o Memcached para datos frecuentes\n- Usa query caching cuando sea apropiado\n- Cachea resultados computacionalmente costosos\n\n**Normalización vs Desnormalización:**\n- Normaliza para evitar redundancia\n- Desnormaliza estratégicamente para mejorar lecturas"
+        },
+        {
+            role: 'user',
+            content: "¿Y sobre seguridad en aplicaciones web?"
+        },
+        {
+            role: 'bot',
+            content: "La seguridad es fundamental. Aquí están las mejores prácticas esenciales:\n\n**Autenticación y Autorización:**\n- Implementa JWT o OAuth 2.0\n- Usa bcrypt o Argon2 para hashear contraseñas\n- Implementa autenticación de dos factores (2FA)\n- Establece políticas de contraseñas fuertes\n\n**Protección de Datos:**\n- Usa HTTPS (TLS/SSL) para todas las comunicaciones\n- Encripta datos sensibles en reposo\n- Implementa CORS correctamente\n- Valida y sanitiza todas las entradas de usuario\n\n**Prevención de Ataques:**\n- Protege contra SQL Injection (usa prepared statements)\n- Previene XSS (Cross-Site Scripting)\n- Implementa CSRF tokens\n- Rate limiting para prevenir DDoS\n- Mantén dependencias actualizadas\n\n**Headers de Seguridad:**\n- Content-Security-Policy\n- X-Frame-Options\n- X-Content-Type-Options\n- Strict-Transport-Security"
+        },
+        {
+            role: 'user',
             content: "Me encanta, gracias."
         },
         {
@@ -73,36 +176,44 @@ export function Chatbot() {
         <Menu>
             {/* ESTILOS DE LA BARRA DE DESPLAZAMIENTO (SCROLLBAR) */}
             <style>{`
-                /* Scrollbar personalizada */
+                /* Scrollbar personalizada - Más visible y profesional */
                 .custom-scrollbar::-webkit-scrollbar {
-                    width: 6px; /* Ajustado para ser más sutil como en diseños modernos */
+                    width: 8px;
                 }
                 .custom-scrollbar::-webkit-scrollbar-track {
-                    background: transparent;
+                    background: #f1f5f9; /* slate-100 */
+                    border-radius: 10px;
+                    margin: 4px;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb {
                     background: #cbd5e1; /* slate-300 */
                     border-radius: 10px;
+                    border: 2px solid #f1f5f9;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
                     background: #94a3b8; /* slate-400 */
                 }
 
-                /* Ajuste para que el textarea no muestre barra a menos que se necesite,
-                   y si se necesita, use la personalizada */
+                /* Scrollbar para el textarea */
                 .textarea-scrollbar::-webkit-scrollbar {
                     width: 6px; 
+                }
+                .textarea-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
                 }
                 .textarea-scrollbar::-webkit-scrollbar-thumb {
                     background: #e2e8f0; /* slate-200, más claro para el input */
                     border-radius: 10px;
                 }
+                .textarea-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: #cbd5e1; /* slate-300 */
+                }
             `}</style>
 
-            <div className="font-sans min-h-screen bg-gray-50">
-                <div className="p-5 pb-0 h-full flex flex-col">
+            <div className="font-sans h-screen bg-gray-50 flex flex-col overflow-hidden">
+                <div className="p-5 flex flex-col h-full">
                     {/* Header Section */}
-                    <div className="flex justify-between items-start mb-6">
+                    <div className="flex justify-between items-start mb-6 shrink-0">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900">Chatbot AI</h1>
                             <p className="text-gray-500 mt-1">Asistente inteligente para ayudarte con tus consultas y tareas.</p>
@@ -110,11 +221,11 @@ export function Chatbot() {
                     </div>
 
                     {/* Contenedor principal del Chat y Sidebar */}
-                    {/* h-[calc(100vh-180px)] asegura que el contenedor principal use el espacio disponible */}
-                    <div className="flex flex-1 bg-white border border-gray-200 rounded-xl overflow-hidden h-[calc(100vh-180px)] shadow-sm">
+                    {/* flex-1 con min-h-0 permite que este contenedor se ajuste y permita scroll interno */}
+                    <div className="flex flex-1 bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm min-h-0">
 
                         {/* Área principal del Chat (Mensajes e Input) - IZQUIERDA */}
-                        <div className="flex-1 flex flex-col relative bg-white min-w-0">
+                        <div className="flex-1 flex flex-col relative bg-white min-w-0 min-h-0">
 
                             {/* Contenedor de Mensajes - CON BARRA INDEPENDIENTE */}
                             <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar min-h-0">
