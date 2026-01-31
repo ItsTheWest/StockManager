@@ -20,7 +20,7 @@ export function Providers() {
                 .select('*')
                 .eq('estado', true) // Solo mostrar proveedores activos
                 .order('nombre', { ascending: true });
-                
+
             if (error) {
                 console.error('Error al obtener los proveedores:', error);
                 return;
@@ -80,7 +80,7 @@ export function Providers() {
     }, [location]);
 
     const handleDeleteClick = (id: number, e: React.MouseEvent) => {
-        e.stopPropagation(); 
+        e.stopPropagation();
         setProviderToDelete(id);
         setIsDeleteModalOpen(true);
         setOpenActionMenuId(null);
@@ -132,7 +132,7 @@ export function Providers() {
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    
+
     const paginatedProviders = filteredProviders.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(filteredProviders.length / itemsPerPage);
 
@@ -144,7 +144,7 @@ export function Providers() {
     }, [searchTerm]);
 
     // --- 6. CONSTANTES DE DISEÑO (PARA MANTENER ESTRUCTURA) ---
-    const ROW_HEIGHT = 81; 
+    const ROW_HEIGHT = 81;
     const MIN_ROWS = 5;
     const TABLE_MIN_HEIGHT = `${ROW_HEIGHT * MIN_ROWS}px`;
 
@@ -336,7 +336,7 @@ export function Providers() {
                                 Mostrando <span className="font-bold text-gray-900">{filteredProviders.length > 0 ? indexOfFirstItem + 1 : 0}</span> a <span className="font-bold text-gray-900">{Math.min(indexOfLastItem, filteredProviders.length)}</span> de <span className="font-bold text-gray-900">{filteredProviders.length}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <button 
+                                <button
                                     onClick={() => paginate(currentPage - 1)}
                                     disabled={currentPage === 1}
                                     className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -351,17 +351,16 @@ export function Providers() {
                                         key={i + 1}
                                         onClick={() => paginate(i + 1)}
                                         disabled={totalPages === 0}
-                                        className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all ${
-                                            currentPage === i + 1 
-                                            ? "bg-blue-600 text-white shadow-sm" 
-                                            : "text-gray-600 hover:bg-gray-50 border border-transparent hover:border-gray-200" 
-                                        } ${totalPages === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                                        className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all ${currentPage === i + 1
+                                                ? "bg-blue-600 text-white shadow-sm"
+                                                : "text-gray-600 hover:bg-gray-50 border border-transparent hover:border-gray-200"
+                                            } ${totalPages === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
                                     >
                                         {i + 1}
                                     </button>
                                 ))}
 
-                                <button 
+                                <button
                                     onClick={() => paginate(currentPage + 1)}
                                     disabled={currentPage === totalPages || totalPages === 0}
                                     className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -375,7 +374,7 @@ export function Providers() {
                     </div>
                 </main>
             </div>
-            
+
             {/* Componentes de Feedback y Acción */}
             <DeleteModal
                 isOpen={isDeleteModalOpen}

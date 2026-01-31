@@ -34,7 +34,12 @@ export function Menu({ children }: MenuProps) {
     };
 
     const toggleInventario = () => {
-        setInventarioOpen(!inventarioOpen);
+        // Si ya estamos en una ruta del inventario, mantener abierto
+        if (isInventarioRoute) {
+            setInventarioOpen(true);
+        } else {
+            setInventarioOpen(!inventarioOpen);
+        }
     };
 
 

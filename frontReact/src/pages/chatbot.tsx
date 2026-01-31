@@ -210,19 +210,11 @@ export function Chatbot() {
                 }
             `}</style>
 
-            <div className="font-sans h-screen bg-gray-50 flex flex-col overflow-hidden">
-                <div className="p-5 flex flex-col h-full">
-                    {/* Header Section */}
-                    <div className="flex justify-between items-start mb-6 shrink-0">
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Chatbot AI</h1>
-                            <p className="text-gray-500 mt-1">Asistente inteligente para ayudarte con tus consultas y tareas.</p>
-                        </div>
-                    </div>
-
+            <div className=" h-screen flex flex-col overflow-hidden">
+                <div className=" flex flex-col h-full">
                     {/* Contenedor principal del Chat y Sidebar */}
-                    {/* flex-1 con min-h-0 permite que este contenedor se ajuste y permita scroll interno */}
-                    <div className="flex flex-1 bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm min-h-0">
+                    {/* flex-1 con min-h-0 permite que este contenedor  ajuste y permita scroll interno */}
+                    <div className="m-5 flex flex-1 bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm min-h-0">
 
                         {/* Área principal del Chat (Mensajes e Input) - IZQUIERDA */}
                         <div className="flex-1 flex flex-col relative bg-white min-w-0 min-h-0">
